@@ -4,7 +4,12 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.enableCors();  // Para evitar problemas de CORS
+  app.enableCors({
+    origin: 'http://localhost:4000',
+    methods: 'GET,POST,PATCH,PUT,DELETE,OPTIONS',
+    allowHeaders: 'Content-Type, Authorization',
+    credentials: true
+  });  // Para evitar problemas de CORS
 
   const config = new DocumentBuilder()
     .setTitle('Super API')
