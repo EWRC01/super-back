@@ -20,7 +20,8 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
 
   document.tags = [
-    { name: 'Users', description: 'Endpoints related to Users' }
+    { name: 'Users', description: 'Endpoints related to Users' },
+    { name: 'Brands', description: 'Endpoints related to Brands' },
   ];
 
   SwaggerModule.setup('api', app, document); // Configurar Swagger ANTES de app.listen()

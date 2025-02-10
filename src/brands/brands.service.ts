@@ -1,26 +1,44 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Brand } from './entities/brand.entity';
 import { CreateBrandDto } from './dto/create-brand.dto';
 import { UpdateBrandDto } from './dto/update-brand.dto';
 
 @Injectable()
 export class BrandsService {
-  create(createBrandDto: CreateBrandDto) {
-    return 'This action adds a new brand';
+  constructor(
+    @InjectRepository(Brand)
+    private readonly brandRepository: Repository<Brand>,
+  ) {}
+
+  async create(createBrandDto: CreateBrandDto): Promise<Brand> {
+    const newBrand = this.brandRepository.create(createBrandDto);
+    return await this.brandRepository.save(newBrand);
   }
 
-  findAll() {
-    return `This action returns all brands`;
+  async findAll(): Promise<Brand[]> {
+    return await this.brandRepository.find({ relations: ['products'] });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} brand`;
+  async findOne(id: number): Promise<Brand> {
+    const brand = await this.brandRepository.findOne({ where: { id }, relations: ['products'] });
+    if (!brand) {
+      throw new NotFoundException(`La marca con el ID ${id} no existe`);
+    }
+    return brand;
   }
 
-  update(id: number, updateBrandDto: UpdateBrandDto) {
-    return `This action updates a #${id} brand`;
+  async update(id: number, updateBrandDto: UpdateBrandDto): Promise<Brand> {
+    await this.findOne(id); // Verifica si la marca existe antes de actualizarla
+    await this.brandRepository.update(id, updateBrandDto);
+    return this.findOne(id);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} brand`;
+  async remove(id: number): Promise<void> {
+    const result = await this.brandRepository.delete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException(`No se encontró la marca con ID ${id} para eliminar`);
+    }
   }
 }
