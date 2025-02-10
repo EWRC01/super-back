@@ -1,26 +1,44 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Category } from './entities/category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 
 @Injectable()
 export class CategoriesService {
-  create(createCategoryDto: CreateCategoryDto) {
-    return 'This action adds a new category';
+  constructor(
+    @InjectRepository(Category)
+    private readonly categoryRepository: Repository<Category>,
+  ) {}
+
+  async create(createCategoryDto: CreateCategoryDto): Promise<Category> {
+    const newCategory = this.categoryRepository.create(createCategoryDto);
+    return await this.categoryRepository.save(newCategory);
   }
 
-  findAll() {
-    return `This action returns all categories`;
+  async findAll(): Promise<Category[]> {
+    return await this.categoryRepository.find({ relations: ['products'] });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} category`;
+  async findOne(id: number): Promise<Category> {
+    const category = await this.categoryRepository.findOne({ where: { id }, relations: ['products'] });
+    if (!category) {
+      throw new NotFoundException(`La categoría con el ID ${id} no existe`);
+    }
+    return category;
   }
 
-  update(id: number, updateCategoryDto: UpdateCategoryDto) {
-    return `This action updates a #${id} category`;
+  async update(id: number, updateCategoryDto: UpdateCategoryDto): Promise<Category> {
+    await this.findOne(id); // Verifica si la categoría existe antes de actualizarla
+    await this.categoryRepository.update(id, updateCategoryDto);
+    return this.findOne(id);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} category`;
+  async remove(id: number): Promise<void> {
+    const result = await this.categoryRepository.delete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException(`No se encontró la categoría con ID ${id} para eliminar`);
+    }
   }
 }

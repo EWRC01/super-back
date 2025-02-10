@@ -1,34 +1,49 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { Category } from './entities/category.entity';
 
+@ApiTags('Categories')
 @Controller('categories')
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
   @Post()
-  create(@Body() createCategoryDto: CreateCategoryDto) {
+  @ApiOperation({ summary: 'Registrar una nueva categoría' })
+  @ApiResponse({ status: 201, description: 'Categoría creada exitosamente', type: Category })
+  create(@Body() createCategoryDto: CreateCategoryDto): Promise<Category> {
     return this.categoriesService.create(createCategoryDto);
   }
 
   @Get()
-  findAll() {
+  @ApiOperation({ summary: 'Obtener todas las categorías' })
+  @ApiResponse({ status: 200, description: 'Lista de categorías', type: [Category] })
+  findAll(): Promise<Category[]> {
     return this.categoriesService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.categoriesService.findOne(+id);
+  @ApiOperation({ summary: 'Obtener una categoría por ID' })
+  @ApiResponse({ status: 200, description: 'Categoría encontrada', type: Category })
+  @ApiResponse({ status: 404, description: 'Categoría no encontrada' })
+  findOne(@Param('id') id: number): Promise<Category> {
+    return this.categoriesService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCategoryDto: UpdateCategoryDto) {
-    return this.categoriesService.update(+id, updateCategoryDto);
+  @ApiOperation({ summary: 'Actualizar una categoría' })
+  @ApiResponse({ status: 200, description: 'Categoría actualizada', type: Category })
+  update(@Param('id') id: number, @Body() updateCategoryDto: UpdateCategoryDto): Promise<Category> {
+    return this.categoriesService.update(id, updateCategoryDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.categoriesService.remove(+id);
+  @ApiOperation({ summary: 'Eliminar una categoría' })
+  @ApiResponse({ status: 200, description: 'Categoría eliminada exitosamente' })
+  @ApiResponse({ status: 404, description: 'Categoría no encontrada' })
+  remove(@Param('id') id: number): Promise<void> {
+    return this.categoriesService.remove(id);
   }
 }
