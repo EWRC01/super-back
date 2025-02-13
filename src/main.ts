@@ -24,6 +24,7 @@ async function bootstrap() {
     { name: 'Brands', description: 'Endpoints related to Brands' },
     { name: 'Categories', description: 'Endpoints related to Categories' },
     { name: 'Products', description: 'Endpoints related to Products' },
+    {name: 'Sold-Products', description: 'Endpoints related to Sold Products'},
   ];
 
   SwaggerModule.setup('api', app, document); // Configurar Swagger ANTES de app.listen()
