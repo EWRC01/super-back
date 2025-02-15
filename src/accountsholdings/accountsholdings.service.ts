@@ -1,26 +1,27 @@
 import { Injectable } from '@nestjs/common';
-import { CreateAccountsholdingDto } from './dto/create-accountsholding.dto';
-import { UpdateAccountsholdingDto } from './dto/update-accountsholding.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { AccountsHoldings } from './entities/accountsholding.entity';
+import { FilterAccountsHoldingsDto } from './dto/filter-account-holdings.dto';
 
 @Injectable()
-export class AccountsholdingsService {
-  create(createAccountsholdingDto: CreateAccountsholdingDto) {
-    return 'This action adds a new accountsholding';
-  }
+export class AccountsHoldingsService {
+  constructor(
+    @InjectRepository(AccountsHoldings)
+    private accountsHoldingsRepository: Repository<AccountsHoldings>,
+  ) {}
 
-  findAll() {
-    return `This action returns all accountsholdings`;
-  }
+  async getTotalBalance(filters: FilterAccountsHoldingsDto) {
+    const query = this.accountsHoldingsRepository.createQueryBuilder('accounts_holdings')
+      .select('SUM(accounts_holdings.balance)', 'totalBalance');
 
-  findOne(id: number) {
-    return `This action returns a #${id} accountsholding`;
-  }
+    if (filters.startDate) {
+      query.andWhere('accounts_holdings.date >= :startDate', { startDate: filters.startDate });
+    }
+    if (filters.endDate) {
+      query.andWhere('accounts_holdings.date <= :endDate', { endDate: filters.endDate });
+    }
 
-  update(id: number, updateAccountsholdingDto: UpdateAccountsholdingDto) {
-    return `This action updates a #${id} accountsholding`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} accountsholding`;
+    return await query.getRawOne();
   }
 }

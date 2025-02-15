@@ -1,26 +1,45 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Sale } from './entities/sale.entity';
 import { CreateSaleDto } from './dto/create-sale.dto';
-import { UpdateSaleDto } from './dto/update-sale.dto';
+import { FilterSalesDto } from './dto/filter-sales.dto';
 
 @Injectable()
 export class SalesService {
-  create(createSaleDto: CreateSaleDto) {
-    return 'This action adds a new sale';
+  constructor(
+    @InjectRepository(Sale)
+    private salesRepository: Repository<Sale>,
+  ) {}
+
+  async createSale(createSaleDto: CreateSaleDto) {
+    const sale = this.salesRepository.create(createSaleDto);
+    return await this.salesRepository.save(sale);
   }
 
-  findAll() {
-    return `This action returns all sales`;
+  async getSales(filters: FilterSalesDto) {
+    const query = this.salesRepository.createQueryBuilder('sale');
+    if (filters.startDate) {
+      query.andWhere('sale.date >= :startDate', { startDate: filters.startDate });
+    }
+    if (filters.endDate) {
+      query.andWhere('sale.date <= :endDate', { endDate: filters.endDate });
+    }
+    return await query.getMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} sale`;
-  }
+  async getTotalSales(filters: FilterSalesDto) {
+    const query = this.salesRepository.createQueryBuilder('sale')
+      .select('SUM(sale.total)', 'totalAmount')
+      .addSelect('COUNT(sale.id)', 'totalSales');
 
-  update(id: number, updateSaleDto: UpdateSaleDto) {
-    return `This action updates a #${id} sale`;
-  }
+    if (filters.startDate) {
+      query.andWhere('sale.date >= :startDate', { startDate: filters.startDate });
+    }
+    if (filters.endDate) {
+      query.andWhere('sale.date <= :endDate', { endDate: filters.endDate });
+    }
 
-  remove(id: number) {
-    return `This action removes a #${id} sale`;
+    return await query.getRawOne();
   }
 }

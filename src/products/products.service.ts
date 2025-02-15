@@ -135,7 +135,7 @@ export class ProductsService {
     if (quantity <= 0) throw new BadRequestException('La cantidad debe ser un número positivo.');
     const product = await this.productRepository.findOne({ where: { id } });
     if (!product) throw new NotFoundException(`Producto con ID ${id} no encontrado.`);
-    product.stock += quantity;
+    product.stock += Number(quantity);
     return await this.productRepository.save(product);
   }
 

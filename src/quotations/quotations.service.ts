@@ -1,26 +1,39 @@
 import { Injectable } from '@nestjs/common';
-import { CreateQuotationDto } from './dto/create-quotation.dto';
-import { UpdateQuotationDto } from './dto/update-quotation.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Quotation } from './entities/quotation.entity';
+import { FilterQuotationsDto } from './dto/filter-quotations.dto';
 
 @Injectable()
 export class QuotationsService {
-  create(createQuotationDto: CreateQuotationDto) {
-    return 'This action adds a new quotation';
+  constructor(
+    @InjectRepository(Quotation)
+    private quotationsRepository: Repository<Quotation>,
+  ) {}
+
+  async getQuotations(filters: FilterQuotationsDto) {
+    const query = this.quotationsRepository.createQueryBuilder('quotation');
+    if (filters.startDate) {
+      query.andWhere('quotation.date >= :startDate', { startDate: filters.startDate });
+    }
+    if (filters.endDate) {
+      query.andWhere('quotation.date <= :endDate', { endDate: filters.endDate });
+    }
+    return await query.getMany();
   }
 
-  findAll() {
-    return `This action returns all quotations`;
-  }
+  async getTotalQuotations(filters: FilterQuotationsDto) {
+    const query = this.quotationsRepository.createQueryBuilder('quotation')
+      .select('SUM(quotation.amount)', 'totalAmount')
+      .addSelect('COUNT(quotation.id)', 'totalQuotations');
 
-  findOne(id: number) {
-    return `This action returns a #${id} quotation`;
-  }
+    if (filters.startDate) {
+      query.andWhere('quotation.date >= :startDate', { startDate: filters.startDate });
+    }
+    if (filters.endDate) {
+      query.andWhere('quotation.date <= :endDate', { endDate: filters.endDate });
+    }
 
-  update(id: number, updateQuotationDto: UpdateQuotationDto) {
-    return `This action updates a #${id} quotation`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} quotation`;
+    return await query.getRawOne();
   }
 }

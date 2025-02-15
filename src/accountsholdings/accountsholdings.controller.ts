@@ -1,34 +1,18 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { AccountsholdingsService } from './accountsholdings.service';
-import { CreateAccountsholdingDto } from './dto/create-accountsholding.dto';
-import { UpdateAccountsholdingDto } from './dto/update-accountsholding.dto';
+import { Controller, Get, Query } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { AccountsHoldingsService } from './accountsholdings.service';
+import { FilterAccountsHoldingsDto } from './dto/filter-account-holdings.dto';
+import { AccountsHoldingsResponseDto } from './dto/accounts-holdings-response.dto';
 
-@Controller('accountsholdings')
-export class AccountsholdingsController {
-  constructor(private readonly accountsholdingsService: AccountsholdingsService) {}
+@ApiTags('Accounts Holdings')
+@Controller('accounts-holdings')
+export class AccountsHoldingsController {
+  constructor(private readonly accountsHoldingsService: AccountsHoldingsService) {}
 
-  @Post()
-  create(@Body() createAccountsholdingDto: CreateAccountsholdingDto) {
-    return this.accountsholdingsService.create(createAccountsholdingDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.accountsholdingsService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.accountsholdingsService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAccountsholdingDto: UpdateAccountsholdingDto) {
-    return this.accountsholdingsService.update(+id, updateAccountsholdingDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.accountsholdingsService.remove(+id);
+  @Get('/total')
+  @ApiOperation({ summary: 'Obtener el balance total de cuentas' })
+  @ApiResponse({ status: 200, type: AccountsHoldingsResponseDto })
+  getTotalBalance(@Query() filters: FilterAccountsHoldingsDto) {
+    return this.accountsHoldingsService.getTotalBalance(filters);
   }
 }

@@ -1,34 +1,25 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { QuotationsService } from './quotations.service';
-import { CreateQuotationDto } from './dto/create-quotation.dto';
-import { UpdateQuotationDto } from './dto/update-quotation.dto';
+import { FilterQuotationsDto } from './dto/filter-quotations.dto';
+import { QuotationResponseDto } from './dto/quotation-response.dto';
 
+@ApiTags('Quotations')
 @Controller('quotations')
 export class QuotationsController {
   constructor(private readonly quotationsService: QuotationsService) {}
 
-  @Post()
-  create(@Body() createQuotationDto: CreateQuotationDto) {
-    return this.quotationsService.create(createQuotationDto);
-  }
-
   @Get()
-  findAll() {
-    return this.quotationsService.findAll();
+  @ApiOperation({ summary: 'Obtener cotizaciones con filtros' })
+  @ApiResponse({ status: 200, type: [QuotationResponseDto] })
+  getQuotations(@Query() filters: FilterQuotationsDto) {
+    return this.quotationsService.getQuotations(filters);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.quotationsService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateQuotationDto: UpdateQuotationDto) {
-    return this.quotationsService.update(+id, updateQuotationDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.quotationsService.remove(+id);
+  @Get('/total')
+  @ApiOperation({ summary: 'Obtener el total de cotizaciones y monto' })
+  @ApiResponse({ status: 200, type: QuotationResponseDto })
+  getTotalQuotations(@Query() filters: FilterQuotationsDto) {
+    return this.quotationsService.getTotalQuotations(filters);
   }
 }
