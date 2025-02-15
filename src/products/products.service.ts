@@ -147,7 +147,7 @@ export class ProductsService {
     const product = await this.productRepository.findOne({ where: { id } });
     if (!product) throw new NotFoundException(`Producto con ID ${id} no encontrado.`);
     if (product.stock < quantity) throw new BadRequestException('Stock insuficiente para realizar la operación.');
-    product.stock -= quantity;
+    product.stock -= Number(quantity);
     return await this.productRepository.save(product);
   }
 }
