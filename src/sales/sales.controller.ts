@@ -1,9 +1,8 @@
-import { Controller, Post, Get, Body, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { SalesService } from './sales.service';
 import { CreateSaleDto } from './dto/create-sale.dto';
-import { FilterSalesDto } from './dto/filter-sales.dto';
-import { SalesResponseDto } from './dto/sales-response.dto';
+import { UpdateSaleDto } from './dto/update-sale.dto';
 
 @ApiTags('Sales')
 @Controller('sales')
@@ -11,23 +10,69 @@ export class SalesController {
   constructor(private readonly salesService: SalesService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Crear una nueva venta' })
-  @ApiResponse({ status: 201, description: 'Venta creada exitosamente' })
-  createSale(@Body() createSaleDto: CreateSaleDto) {
-    return this.salesService.createSale(createSaleDto);
+  @ApiOperation({ summary: 'Create a new sale' })
+  @ApiResponse({ status: 201, description: 'The sale has been successfully created.' })
+  @ApiResponse({ status: 404, description: 'Some of the Query Not Found' })
+  @ApiResponse({ status: 400, description: 'Bad Request.' })
+  create(@Body() createSaleDto: CreateSaleDto) {
+    return this.salesService.create(createSaleDto);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Obtener ventas con filtros' })
-  @ApiResponse({ status: 200, type: [SalesResponseDto] })
-  getSales(@Query() filters: FilterSalesDto) {
-    return this.salesService.getSales(filters);
+  @ApiOperation({ summary: 'Get all sales within a date range' })
+  @ApiQuery({ name: 'startDate', required: false })
+  @ApiQuery({ name: 'endDate', required: false })
+  @ApiResponse({ status: 200, description: 'List of sales.' })
+  findAll(@Query('startDate') startDate: string, @Query('endDate') endDate: string) {
+    return this.salesService.findAll(startDate, endDate);
   }
 
-  @Get('/total')
-  @ApiOperation({ summary: 'Obtener el total de ventas y monto' })
-  @ApiResponse({ status: 200, type: SalesResponseDto })
-  getTotalSales(@Query() filters: FilterSalesDto) {
-    return this.salesService.getTotalSales(filters);
+  @Get('daily/:month/:year')
+  @ApiOperation({ summary: 'Get daily sales for a specific month and year' })
+  @ApiResponse({ status: 200, description: 'Daily sales data.' })
+  getDailySales(@Param('month') month: string, @Param('year') year: string) {
+    return this.salesService.getDailySales(+month, +year);
+  }
+
+  @Get('monthly/:year')
+  @ApiOperation({ summary: 'Get monthly sales for a specific year' })
+  @ApiResponse({ status: 200, description: 'Monthly sales data.' })
+  getMonthlySales(@Param('year') year: string) {
+    return this.salesService.getMonthlySales(+year);
+  }
+
+  @Get('total-income')
+  @ApiOperation({ summary: 'Get total income from sales' })
+  @ApiResponse({ status: 200, description: 'Total income.' })
+  getTotalIncome() {
+    return this.salesService.getTotalIncome();
+  }
+
+  @Get('today-income')
+  @ApiOperation({ summary: 'Get income from sales for today' })
+  @ApiResponse({ status: 200, description: 'Today\'s income.' })
+  getTodayIncome() {
+    return this.salesService.getTodayIncome();
+  }
+
+  @Get('weekly-income')
+  @ApiOperation({ summary: 'Get income from sales for the current week' })
+  @ApiResponse({ status: 200, description: 'Weekly income.' })
+  getWeeklyIncome() {
+    return this.salesService.getWeeklyIncome();
+  }
+
+  @Get('monthly-income')
+  @ApiOperation({ summary: 'Get income from sales for the current month' })
+  @ApiResponse({ status: 200, description: 'Monthly income.' })
+  getMonthlyIncome() {
+    return this.salesService.getMonthlyIncome();
+  }
+
+  @Get('pending-income')
+  @ApiOperation({ summary: 'Get pending income from sales' })
+  @ApiResponse({ status: 200, description: 'Pending income.' })
+  getPendingIncome() {
+    return this.salesService.getPendingIncome();
   }
 }

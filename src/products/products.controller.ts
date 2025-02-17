@@ -38,6 +38,33 @@ export class ProductsController {
     return this.productsService.findOne(id);
   }
 
+  @Get('price/:id')
+  @ApiOperation({ summary: 'Get product price by ID' })
+  @ApiParam({ name: 'id', type: 'number', description: 'Product ID' })
+  @ApiResponse({ status: 200, description: 'Product found' })
+  @ApiBadRequestResponse({ description: 'Product not found' })
+  async getPriceByID(@Param('id') id: number) {
+    return this.productsService.getPriceByID(+id)
+  }
+
+  @Get('price-tourist/:id')
+  @ApiOperation({ summary: 'Get product tourist price by ID' })
+  @ApiParam({ name: 'id', type: 'number', description: 'Product ID' })
+  @ApiResponse({ status: 200, description: 'Product found' })
+  @ApiBadRequestResponse({ description: 'Product not found' })
+  async getTouristPrice(@Param('id') id: number) {
+    return this.productsService.getTouristPriceByID(+id)
+  }
+
+  @ApiOperation({ summary: 'Get product whosale price by ID' })
+  @ApiParam({ name: 'id', type: 'number', description: 'Product ID' })
+  @ApiResponse({ status: 200, description: 'Product found' })
+  @ApiBadRequestResponse({ description: 'Product not found' })
+  @Get('price-wholesale/:id')
+  async getWholeSalePrice(@Param('id') id: number) {
+    return this.productsService.getWholeSalePriceByID(+id)
+  }
+
   @Get('profit/:identifier')
   @ApiOperation({ summary: 'Calculate profit for a specific product by ID or code' })
   @ApiParam({ name: 'identifier', type: 'string', description: 'Product ID or code' })

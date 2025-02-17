@@ -1,7 +1,7 @@
-// src/sales/entities/sale.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { Customer } from '../../customers/entities/customer.entity';
 import { User } from '../../users/entities/user.entity';
+import { SoldProduct } from 'src/soldproducts/entities/soldproduct.entity';
 
 @Entity('sales')
 export class Sale {
@@ -24,4 +24,7 @@ export class Sale {
   @ManyToOne(() => User, (user) => user.sales)
   @JoinColumn({ name: 'userId' })
   user: User;
+
+  @OneToMany(() => SoldProduct, (soldProduct) => soldProduct.sale)
+  products: SoldProduct[];
 }

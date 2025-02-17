@@ -1,5 +1,5 @@
 // src/sold-products/dto/create-sold-products.dto.ts
-import { IsArray, ValidateNested, IsNotEmpty, IsDecimal, IsInt, IsEnum } from 'class-validator';
+import { IsArray, ValidateNested, IsNotEmpty, IsDecimal, IsInt, IsEnum, IsIn } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -21,6 +21,15 @@ class CreateSoldProductDto {
   @IsNotEmpty()
   @IsDecimal({ decimal_digits: '2' })
   price: number;
+
+  @ApiProperty({
+    description: 'ID de la venta',
+    example: 1,
+    type: Number,
+  })
+  @IsNotEmpty()
+  @IsInt()
+  saleId: number;
 
   @ApiProperty({
     description: 'ID del producto vendido',

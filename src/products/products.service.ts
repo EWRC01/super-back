@@ -94,6 +94,37 @@ export class ProductsService {
     return product.stock;
   }
 
+  async getPriceByID(id: number) {
+    const product = await this.productRepository.findOne({
+      where: {id: id}
+    })
+
+    if (!product) { throw new NotFoundException(`El producto con el ID: ${id} no fue encontrado!`)};
+
+    return product.salePrice
+  }
+
+  async getWholeSalePriceByID(id: number) {
+    const product = await this.productRepository.findOne({
+      where: {id: id}
+    })
+
+    if (!product) { throw new NotFoundException(`El producto con el ID: ${id} no fue encontrado!`)};
+
+    return product.wholesalePrice
+  }
+
+  async getTouristPriceByID(id: number) {
+
+    const product = await this.productRepository.findOne({
+      where: {id: id}
+    })
+
+    if (!product) { throw new NotFoundException(`El producto con el ID: ${id} no fue encontrado!`)};
+
+    return product.touristPrice
+  }
+
   /**
    * Busca productos por nombre o código.
    */

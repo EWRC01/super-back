@@ -1,5 +1,6 @@
-// src/sold-products/entities/sold-product.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Sale } from '../../sales/entities/sale.entity';
+import { Product } from '../../products/entities/product.entity';
 
 @Entity('sold_products')
 export class SoldProduct {
@@ -18,6 +19,14 @@ export class SoldProduct {
   @Column({ type: 'bigint', unsigned: true, nullable: false })
   referenceId: number;
 
-  @Column({ type: 'enum', enum: ['holding', 'account', 'sale', 'quotation'], nullable: false })
+  @Column({ type: 'enum', enum: ['sale', 'account', 'holding', 'quotation'], nullable: false })
   type: string;
+
+  @ManyToOne(() => Sale, (sale) => sale.products)
+  @JoinColumn({ name: 'saleId' })
+  sale: Sale;
+
+  @ManyToOne(() => Product, (product) => product.soldProducts)
+  @JoinColumn({ name: 'productId' })
+  product: Product;
 }

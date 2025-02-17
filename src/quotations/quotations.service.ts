@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Between } from 'typeorm';
 import { Quotation } from './entities/quotation.entity';
-import { FilterQuotationsDto } from './dto/filter-quotations.dto';
+import { CreateQuotationDto } from './dto/create-quotation.dto';
 
 @Injectable()
 export class QuotationsService {
@@ -11,29 +11,20 @@ export class QuotationsService {
     private quotationsRepository: Repository<Quotation>,
   ) {}
 
-  async getQuotations(filters: FilterQuotationsDto) {
-    const query = this.quotationsRepository.createQueryBuilder('quotation');
-    if (filters.startDate) {
-      query.andWhere('quotation.date >= :startDate', { startDate: filters.startDate });
-    }
-    if (filters.endDate) {
-      query.andWhere('quotation.date <= :endDate', { endDate: filters.endDate });
-    }
-    return await query.getMany();
+  async create(createQuotationDto: CreateQuotationDto): Promise<Quotation> {
+    const quotation = this.quotationsRepository.create(createQuotationDto);
+    return this.quotationsRepository.save(quotation);
   }
 
-  async getTotalQuotations(filters: FilterQuotationsDto) {
-    const query = this.quotationsRepository.createQueryBuilder('quotation')
-      .select('SUM(quotation.amount)', 'totalAmount')
-      .addSelect('COUNT(quotation.id)', 'totalQuotations');
+  async findAll(startDate: string, endDate: string): Promise<Quotation[]> {
+    return this.quotationsRepository.find({
+      where: {
+        date: Between(new Date(startDate), new Date(endDate)),
+      },
+    });
+  }
 
-    if (filters.startDate) {
-      query.andWhere('quotation.date >= :startDate', { startDate: filters.startDate });
-    }
-    if (filters.endDate) {
-      query.andWhere('quotation.date <= :endDate', { endDate: filters.endDate });
-    }
-
-    return await query.getRawOne();
+  async remove(id: number): Promise<void> {
+    await this.quotationsRepository.delete(id);
   }
 }

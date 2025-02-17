@@ -1,26 +1,69 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Customer } from './entities/customer.entity';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 
 @Injectable()
 export class CustomersService {
-  create(createCustomerDto: CreateCustomerDto) {
-    return 'This action adds a new customer';
+  constructor(
+    @InjectRepository(Customer)
+    private customersRepository: Repository<Customer>,
+  ) {}
+
+  async create(createCustomerDto: CreateCustomerDto): Promise<Customer> {
+    const customer = this.customersRepository.create(createCustomerDto);
+    return this.customersRepository.save(customer);
   }
 
-  findAll() {
-    return `This action returns all customers`;
+  async findAll(): Promise<Customer[]> {
+    return this.customersRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} customer`;
+  async findOne(id: number): Promise<Customer> {
+    return this.customersRepository.findOne({ where: { id } });
   }
 
-  update(id: number, updateCustomerDto: UpdateCustomerDto) {
-    return `This action updates a #${id} customer`;
+  async update(id: number, updateCustomerDto: UpdateCustomerDto): Promise<Customer> {
+
+    const customer = await this.customersRepository.findOne({ where: { id } });
+
+    if (!customer) {throw new NotFoundException(`Customer with ID ${id} not found`);}
+
+    await this.customersRepository.update(id, updateCustomerDto);
+
+    return this.customersRepository.findOne({ where: { id } });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} customer`;
+  async remove(id: number): Promise<void> {
+
+    const customer = await this.customersRepository.findOne({ where: { id } });
+
+    if (!customer) {throw new NotFoundException(`Customer with ID ${id} not found`);}
+
+    await this.customersRepository.delete(id);
+  }
+
+  async getSalesByCustomer(id: number): Promise<any> {
+
+    const customer = await this.customersRepository.findOne({ where: { id } });
+
+    if (!customer) {throw new NotFoundException(`Customer with ID ${id} not found`);} 
+
+    return this.customersRepository
+      .createQueryBuilder('customer')
+      .select('customer.id', 'id')
+      .addSelect('SUM(sale.total)', 'totalSales')
+      .leftJoin('customer.sales', 'sale')
+      .groupBy('customer.id')
+      .getRawMany();
+  }
+
+  async searchByName(name: string): Promise<Customer[]> {
+    return this.customersRepository
+      .createQueryBuilder('customer')
+      .where('customer.name LIKE :name', { name: `%${name}%` })
+      .getMany();
   }
 }

@@ -1,4 +1,3 @@
-// src/users/users.controller.ts
 import {
   Controller,
   Post,
@@ -9,6 +8,7 @@ import {
   Delete,
   HttpException,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -16,6 +16,7 @@ import {
   ApiResponse,
   ApiBody,
   ApiParam,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -135,5 +136,82 @@ export class UsersController {
   @ApiBody({ type: ChangePasswordDto })
   async changePassword(@Body() changePasswordDto: ChangePasswordDto) {
     return this.usersService.changePassword(changePasswordDto);
+  }
+
+  // Nuevos endpoints para las funciones adicionales
+
+  @Get(':id/monthly-sales')
+  @ApiOperation({ summary: 'Obtener ventas mensuales de un usuario' })
+  @ApiResponse({
+    status: 200,
+    description: 'Ventas mensuales del usuario',
+    type: Object,
+  })
+  @ApiParam({ name: 'id', type: Number, description: 'ID del usuario' })
+  @ApiQuery({ name: 'year', type: Number, description: 'Año para filtrar las ventas' })
+  async getMonthlySalesByUser(
+    @Param('id') userId: number,
+    @Query('year') year: number,
+  ) {
+    return this.usersService.getMonthlySalesByUser(userId, year);
+  }
+
+  @Get(':id/total-income')
+  @ApiOperation({ summary: 'Obtener el total de ingresos de un usuario' })
+  @ApiResponse({
+    status: 200,
+    description: 'Total de ingresos del usuario',
+    type: Object,
+  })
+  @ApiParam({ name: 'id', type: Number, description: 'ID del usuario' })
+  async getTotalIncomeByUser(@Param('id') userId: number) {
+    return this.usersService.getTotalIncomeByUser(userId);
+  }
+
+  @Get(':id/today-income')
+  @ApiOperation({ summary: 'Obtener los ingresos de un usuario hoy' })
+  @ApiResponse({
+    status: 200,
+    description: 'Ingresos del usuario hoy',
+    type: Object,
+  })
+  @ApiParam({ name: 'id', type: Number, description: 'ID del usuario' })
+  async getTodayIncomeByUser(@Param('id') userId: number) {
+    return this.usersService.getTodayIncomeByUser(userId);
+  }
+
+  @Get(':id/weekly-income')
+  @ApiOperation({ summary: 'Obtener los ingresos de un usuario esta semana' })
+  @ApiResponse({
+    status: 200,
+    description: 'Ingresos del usuario esta semana',
+    type: Object,
+  })
+  @ApiParam({ name: 'id', type: Number, description: 'ID del usuario' })
+  async getWeeklyIncomeByUser(@Param('id') userId: number) {
+    return this.usersService.getWeeklyIncomeByUser(userId);
+  }
+
+  @Get(':id/monthly-income')
+  @ApiOperation({ summary: 'Obtener los ingresos de un usuario este mes' })
+  @ApiResponse({
+    status: 200,
+    description: 'Ingresos del usuario este mes',
+    type: Object,
+  })
+  @ApiParam({ name: 'id', type: Number, description: 'ID del usuario' })
+  async getMonthlyIncomeByUser(@Param('id') userId: number) {
+    return this.usersService.getMonthlyIncomeByUser(userId);
+  }
+
+  @Get('sales-by-user')
+  @ApiOperation({ summary: 'Obtener las ventas por usuario' })
+  @ApiResponse({
+    status: 200,
+    description: 'Ventas agrupadas por usuario',
+    type: Object,
+  })
+  async getSalesByUser() {
+    return this.usersService.getSalesByUser();
   }
 }

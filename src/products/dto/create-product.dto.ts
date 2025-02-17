@@ -31,6 +31,13 @@ export class CreateProductDto {
   salePrice: number;
 
   @ApiProperty({
+    description: 'Precio de turista del producto',
+    example: 1500,
+  })
+  @IsNumber()
+  touristPrice: number;
+
+  @ApiProperty({
     description: 'Cantidad de stock disponible',
     example: 50,
   })

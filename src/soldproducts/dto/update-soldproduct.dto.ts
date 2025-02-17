@@ -24,6 +24,14 @@ export class UpdateSoldProductDto {
   price?: number;
 
   @ApiProperty({
+    description: 'ID de la venta (opcional)',
+    example: 1,
+    type: Number,
+    required: false,
+  })
+  saleId?: number;
+
+  @ApiProperty({
     description: 'ID del producto vendido (opcional)',
     example: 2,
     type: Number,
