@@ -204,7 +204,7 @@ export class UsersController {
     return this.usersService.getMonthlyIncomeByUser(userId);
   }
 
-  @Get('sales-by-user')
+  @Get('report/sales-by-user')
   @ApiOperation({ summary: 'Obtener las ventas por usuario' })
   @ApiResponse({
     status: 200,

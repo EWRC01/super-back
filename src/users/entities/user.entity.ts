@@ -21,12 +21,12 @@ export class User {
   @Column({ type: 'varchar', length: 255, nullable: false })
   password: string;
 
-  @OneToMany(() => Sale, (sale) => sale.user)
+  @OneToMany(() => Sale, (sale) => sale.user, {onDelete: 'CASCADE'})
   sales: Sale[];
 
-  @OneToMany(() => AccountsHoldings, (accountsHoldings) => accountsHoldings.user)
+  @OneToMany(() => AccountsHoldings, (accountsHoldings) => accountsHoldings.user, {onDelete: 'CASCADE'})
   accountsHoldings: AccountsHoldings[];
 
-  @OneToMany(() => Quotation, (quotation) => quotation.user)
+  @OneToMany(() => Quotation, (quotation) => quotation.user, {onDelete: 'CASCADE'})
   quotations: Quotation[];
 }

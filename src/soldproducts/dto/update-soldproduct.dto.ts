@@ -1,6 +1,8 @@
 // src/sold-products/dto/update-sold-product.dto.ts
-import { IsOptional, IsDecimal, IsInt, IsEnum } from 'class-validator';
+import { IsOptional, IsDecimal, IsInt, IsEnum, IsNotEmpty, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { PriceType } from 'src/common/enums/price-type.enum';
+import { OperationType } from 'src/common/enums/operation-type.enum';
 
 export class UpdateSoldProductDto {
   @ApiProperty({
@@ -42,6 +44,15 @@ export class UpdateSoldProductDto {
   productId?: number;
 
   @ApiProperty({
+      description: 'Tipo de precio',
+      example: 'sale',
+      enum: PriceType,
+    })
+    @IsNotEmpty()
+    @IsString()
+    priceType?: string;
+
+  @ApiProperty({
     description: 'ID de referencia (opcional)',
     example: 456,
     type: Number,
@@ -54,11 +65,11 @@ export class UpdateSoldProductDto {
   @ApiProperty({
     description: 'Tipo de operación (opcional)',
     example: 'account',
-    enum: ['holding', 'account', 'sale', 'quotation'],
+    enum: OperationType,
     required: false,
   })
   @IsOptional()
-  @IsEnum(['holding', 'account', 'sale', 'quotation'], {
+  @IsEnum(OperationType, {
     message: 'El tipo debe ser uno de: holding, account, sale, quotation',
   })
   type?: string;

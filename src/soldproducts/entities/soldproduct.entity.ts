@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { Sale } from '../../sales/entities/sale.entity';
 import { Product } from '../../products/entities/product.entity';
+import { OperationType } from 'src/common/enums/operation-type.enum';
 
 @Entity('sold_products')
 export class SoldProduct {
@@ -16,17 +17,20 @@ export class SoldProduct {
   @Column({ type: 'bigint', unsigned: true, nullable: false })
   productId: number;
 
-  @Column({ type: 'bigint', unsigned: true, nullable: false })
-  referenceId: number;
+  @Column({ type: 'enum', enum: OperationType, nullable: false })
+  priceType: string;
 
-  @Column({ type: 'enum', enum: ['sale', 'account', 'holding', 'quotation'], nullable: false })
+  @Column({ type: 'bigint', unsigned: true, nullable: false })
+  saleId: number;
+
+  @Column({ type: 'enum', enum: OperationType, nullable: false })
   type: string;
 
-  @ManyToOne(() => Sale, (sale) => sale.products)
+  @ManyToOne(() => Sale, (sale) => sale.products, {onDelete: 'CASCADE'})
   @JoinColumn({ name: 'saleId' })
   sale: Sale;
 
-  @ManyToOne(() => Product, (product) => product.soldProducts)
+  @ManyToOne(() => Product, (product) => product.soldProducts, {onDelete: 'CASCADE'})
   @JoinColumn({ name: 'productId' })
   product: Product;
 }

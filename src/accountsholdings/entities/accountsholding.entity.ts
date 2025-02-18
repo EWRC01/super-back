@@ -2,6 +2,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { Customer } from '../../customers/entities/customer.entity';
 import { User } from '../../users/entities/user.entity';
+import { OperationType } from 'src/common/enums/operation-type.enum';
 
 @Entity('accounts_holdings')
 export class AccountsHoldings {
@@ -20,7 +21,7 @@ export class AccountsHoldings {
   @Column({ type: 'decimal', precision: 9, scale: 2, nullable: false })
   toPay: number;
 
-  @Column({ type: 'enum', enum: ['holding', 'account'], nullable: false })
+  @Column({ type: 'enum', enum: OperationType , nullable: false })
   type: string;
 
   @ManyToOne(() => Customer, (customer) => customer.accountsHoldings)

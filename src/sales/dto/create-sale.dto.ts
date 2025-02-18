@@ -1,6 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsNotEmpty, IsDate, IsPositive, IsArray, ValidateNested } from 'class-validator';
+import { IsNumber, IsNotEmpty, IsDate, IsPositive, IsArray, ValidateNested, IsEnum } from 'class-validator';
 import { Type } from 'class-transformer';
+import { PriceType } from 'src/common/enums/price-type.enum';
+
 
 class SoldProductDto {
   @ApiProperty({ example: 1, description: 'ID del producto vendido' })
@@ -13,10 +15,16 @@ class SoldProductDto {
   @IsPositive()
   quantity: number;
 
-  @ApiProperty({ example: 10.5, description: 'Precio unitario del producto' })
-  @IsNumber()
-  @IsPositive()
-  price: number;
+  @ApiProperty({
+    description: 'Tipo de precio a utilizar (sale, wholesale, tourist)',
+    example: PriceType.SALE,
+    enum: PriceType,
+  })
+  @IsNotEmpty()
+  @IsEnum(PriceType, {
+    message: 'El tipo de precio debe ser uno de: sale, wholesale, tourist',
+  })
+  priceType: PriceType;
 }
 
 export class CreateSaleDto {

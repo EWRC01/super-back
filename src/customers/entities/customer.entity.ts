@@ -15,12 +15,12 @@ export class Customer {
   @Column({ type: 'varchar', length: 20, nullable: true })
   phone: string;
 
-  @OneToMany(() => Sale, (sale) => sale.customer)
+  @OneToMany(() => Sale, (sale) => sale.customer, {onDelete: 'CASCADE'})
   sales: Sale[];
 
-  @OneToMany(() => AccountsHoldings, (accountsHoldings) => accountsHoldings.customer)
+  @OneToMany(() => AccountsHoldings, (accountsHoldings) => accountsHoldings.customer, {onDelete: 'CASCADE'})
   accountsHoldings: AccountsHoldings[];
 
-  @OneToMany(() => Quotation, (quotation) => quotation.customer)
+  @OneToMany(() => Quotation, (quotation) => quotation.customer, {onDelete: 'CASCADE'})
   quotations: Quotation[];
 }

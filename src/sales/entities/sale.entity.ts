@@ -17,14 +17,14 @@ export class Sale {
   @Column({ type: 'decimal', precision: 9, scale: 2, nullable: false })
   paid: number;
 
-  @ManyToOne(() => Customer, (customer) => customer.sales)
+  @ManyToOne(() => Customer, (customer) => customer.sales, {onDelete: 'CASCADE'})
   @JoinColumn({ name: 'customerId' })
   customer: Customer;
 
-  @ManyToOne(() => User, (user) => user.sales)
+  @ManyToOne(() => User, (user) => user.sales, {onDelete: 'CASCADE'})
   @JoinColumn({ name: 'userId' })
   user: User;
 
-  @OneToMany(() => SoldProduct, (soldProduct) => soldProduct.sale)
+  @OneToMany(() => SoldProduct, (soldProduct) => soldProduct.sale, {onDelete: 'CASCADE'})
   products: SoldProduct[];
 }

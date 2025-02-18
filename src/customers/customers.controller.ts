@@ -48,7 +48,7 @@ export class CustomersController {
     return this.customersService.remove(+id);
   }
 
-  @Get('sales-by-customer')
+  @Get('sales-by-customer/:id')
   @ApiOperation({ summary: 'Get sales by customer' })
   @ApiResponse({ status: 200, description: 'Sales data by customer.' })
   getSalesByCustomer(id: number) {

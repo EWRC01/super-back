@@ -7,6 +7,7 @@ import { Product } from 'src/products/entities/product.entity';
 import { SoldProduct } from 'src/soldproducts/entities/soldproduct.entity';
 import { User } from 'src/users/entities/user.entity';
 import { Customer } from 'src/customers/entities/customer.entity';
+import { PriceType } from '../common/enums/price-type.enum';
 
 @Injectable()
 export class SalesService {
@@ -43,7 +44,25 @@ export class SalesService {
       if (!productExists) {
         throw new NotFoundException(`Product with ID ${product.productId} not found`);
       }
-      total += product.price * product.quantity; // Sumar al total
+  
+      // Seleccionar el precio según el tipo
+      let price: number;
+      switch (product.priceType) {
+        case PriceType.SALE:
+          price = productExists.salePrice;
+          break;
+        case PriceType.WHOLESALE:
+          price = productExists.wholesalePrice;
+          break;
+        case PriceType.TOURIST:
+          price = productExists.touristPrice;
+          break;
+        default:
+          throw new BadRequestException(`Tipo de precio no válido: ${product.priceType}`);
+      }
+  
+      // Sumar al total
+      total += price * product.quantity;
     }
   
     // Validar que el monto pagado sea suficiente
@@ -54,17 +73,37 @@ export class SalesService {
     // Crear la venta con el total calculado
     const sale = this.salesRepository.create({
       ...createSaleDto,
+      user,
+      customer,
       total, // Asignar el total calculado
     });
     const savedSale = await this.salesRepository.save(sale);
   
     // Registrar los productos vendidos y actualizar el stock
     for (const product of createSaleDto.products) {
+      const productExists = await this.productsRepository.findOne({ where: { id: product.productId } });
+  
+      // Seleccionar el precio según el tipo
+      let price: number;
+      switch (product.priceType) {
+        case PriceType.SALE:
+          price = productExists.salePrice;
+          break;
+        case PriceType.WHOLESALE:
+          price = productExists.wholesalePrice;
+          break;
+        case PriceType.TOURIST:
+          price = productExists.touristPrice;
+          break;
+        default:
+          throw new BadRequestException(`Tipo de precio no válido: ${product.priceType}`);
+      }
+  
       const soldProduct = this.soldProductsRepository.create({
         quantity: product.quantity,
-        price: product.price,
+        price, // Usar el precio seleccionado
         productId: product.productId,
-        referenceId: savedSale.id,
+        saleId: savedSale.id,
         type: 'sale',
       });
       await this.soldProductsRepository.save(soldProduct);
@@ -87,7 +126,7 @@ export class SalesService {
       paid: createSaleDto.paid,
       change,
     };
-}
+  }
 
   async findAll(startDate: string, endDate: string): Promise<Sale[]> {
     return this.salesRepository.find({

@@ -7,6 +7,7 @@ import { Brand } from '../brands/entities/brand.entity';
 import { Category } from '../categories/entities/category.entity';
 import { SoldProduct } from './entities/soldproduct.entity';
 import { CreateSoldProductsDto } from './dto/create-soldproduct.dto';
+import { PriceType } from 'src/common/enums/price-type.enum';
 
 @Injectable()
 export class SoldProductsService {
@@ -62,17 +63,36 @@ export class SoldProductsService {
         );
       }
 
+      // Calcular el precio según el tipo de precio (priceType)
+      let price: number;
+      switch (product.priceType) {
+        case PriceType.SALE:
+          price = existingProduct.salePrice;
+          break;
+        case PriceType.WHOLESALE:
+          price = existingProduct.wholesalePrice;
+          break;
+        case PriceType.TOURIST:
+          price = existingProduct.touristPrice;
+          break;
+        default:
+          throw new NotFoundException(
+            `Tipo de precio no válido: ${product.priceType}`,
+          );
+      }
+
       // Crear el registro de producto vendido
       const soldProduct = this.soldProductRepository.create({
         quantity: product.quantity,
-        price: product.price,
+        price, // Usar el precio calculado
         productId: product.productId,
-        referenceId: product.referenceId,
+        saleId: product.referenceId,
         type: product.type,
+        priceType: product.priceType, // Incluir el tipo de precio
       });
 
       await this.soldProductRepository.save(soldProduct);
-      results.push(1);
+      results.push(1); // Indicar que el producto se registró correctamente
     }
 
     return results;
