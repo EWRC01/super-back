@@ -11,6 +11,7 @@ import { QuotationsModule } from './quotations/quotations.module';
 import { ConfigurationModule } from './configuration/configuration.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -26,7 +27,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         database: configService.get('DB_NAME'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: true,
-        logging: true
+        logging: false
       }),
       inject: [ConfigService],
     }),
@@ -39,7 +40,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     AccountsholdingsModule, 
     SoldproductsModule, 
     QuotationsModule, 
-    ConfigurationModule
+    ConfigurationModule, PaymentsModule
   ],
 })
 export class AppModule {}

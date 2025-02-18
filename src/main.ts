@@ -28,6 +28,7 @@ async function bootstrap() {
     { name: 'Sales', description: 'Endpoints related to Sales' },
     { name: 'Quotes', description: 'Endpoints related to Quotes'},
     { name: 'Accounts-Holdings', description: 'Endpoints related to Account Holdings' },
+    { name: 'Payments', description: 'Endpoints related to Payments' },
     {name: 'Sold-Products', description: 'Endpoints related to Sold Products'},
   ];
 

@@ -1,6 +1,38 @@
 // src/accounts-holdings/dto/create-accountsholding.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDate, IsDecimal, IsEnum, IsInt, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsDate, IsEnum, IsInt, IsNotEmpty, ValidateNested, IsArray, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import { OperationType } from 'src/common/enums/operation-type.enum';
+import { PriceType } from 'src/common/enums/price-type.enum';
+
+class ProductDetailDto {
+  @ApiProperty({
+    description: 'ID del producto',
+    example: 1,
+    type: Number,
+  })
+  @IsNotEmpty()
+  @IsInt()
+  productId: number;
+
+  @ApiProperty({
+    description: 'Cantidad del producto',
+    example: 2,
+    type: Number,
+  })
+  @IsNotEmpty()
+  @IsInt()
+  quantity: number;
+
+  @ApiProperty({
+    description: 'Precio del producto',
+    example: PriceType.SALE,
+    type: Number,
+  })
+  @IsNotEmpty()
+  @IsString()
+  priceType: string;
+}
 
 export class CreateAccountsholdingDto {
   @ApiProperty({
@@ -13,40 +45,13 @@ export class CreateAccountsholdingDto {
   date: Date;
 
   @ApiProperty({
-    description: 'Monto total de la transacción',
-    example: 1000.50,
-    type: Number,
+    description: 'Tipo de transacción',
+    example: OperationType.ACCOUNT,
+    enum: OperationType,
   })
   @IsNotEmpty()
-  @IsDecimal({ decimal_digits: '2' })
-  total: number;
-
-  @ApiProperty({
-    description: 'Cantidad que ya ha sido pagada',
-    example: 500.25,
-    type: Number,
-  })
-  @IsNotEmpty()
-  @IsDecimal({ decimal_digits: '2' })
-  paid: number;
-
-  @ApiProperty({
-    description: 'Cantidad que falta por pagar',
-    example: 500.25,
-    type: Number,
-  })
-  @IsNotEmpty()
-  @IsDecimal({ decimal_digits: '2' })
-  toPay: number;
-
-  @ApiProperty({
-    description: 'Tipo de transacción (holding o account)',
-    example: 'holding',
-    enum: ['holding', 'account'],
-  })
-  @IsNotEmpty()
-  @IsEnum(['holding', 'account'])
-  type: string;
+  @IsEnum(OperationType)
+  type: OperationType;
 
   @ApiProperty({
     description: 'ID del cliente asociado a la transacción',
@@ -55,15 +60,23 @@ export class CreateAccountsholdingDto {
   })
   @IsNotEmpty()
   @IsInt()
-  customerId: number; // Este campo es para relacionar con el Customer
+  customerId: number;
 
   @ApiProperty({
-    description: 'ID del usuario asociado a la transacción (opcional)',
+    description: 'ID del usuario que registró la transacción',
     example: 1,
     type: Number,
-    required: false,
   })
   @IsNotEmpty()
   @IsInt()
-  userId: number; // Este campo es opcional para relacionar con el User
+  userId: number;
+
+  @ApiProperty({
+    description: 'Lista de productos en la cuenta por cobrar',
+    type: [ProductDetailDto],
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ProductDetailDto)
+  products: ProductDetailDto[];
 }

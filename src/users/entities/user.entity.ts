@@ -3,6 +3,7 @@ import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { Sale } from '../../sales/entities/sale.entity';
 import { Quotation } from '../../quotations/entities/quotation.entity';
 import { AccountsHoldings } from 'src/accountsholdings/entities/accountsholding.entity';
+import { Exclude } from 'class-transformer';
 
 @Entity('users')
 export class User {
@@ -18,7 +19,7 @@ export class User {
   @Column({ type: 'varchar', length: 20, nullable: false })
   phone: string;
 
-  @Column({ type: 'varchar', length: 255, nullable: false })
+  @Column({ type: 'varchar', length: 255, nullable: false, select: false })
   password: string;
 
   @OneToMany(() => Sale, (sale) => sale.user, {onDelete: 'CASCADE'})

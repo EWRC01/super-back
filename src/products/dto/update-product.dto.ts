@@ -45,6 +45,13 @@ export class UpdateProductDto {
       })
       @IsNumber()
       stock?: number;
+
+      @ApiProperty({
+        description: 'Cantidad de stock reservado',
+        example: 0,
+      })
+      @IsNumber()
+      reservedStock?: number;
     
       @ApiPropertyOptional({
         description: 'Indica si el producto está disponible para venta al por mayor',

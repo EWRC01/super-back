@@ -1,45 +1,84 @@
-import { Controller, Get, Post, Body, Param, Query, Patch } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import { Controller, Post, Body, Param, Get, NotFoundException, BadRequestException, Put } from '@nestjs/common';
 import { AccountsHoldingsService } from './accountsholdings.service';
 import { CreateAccountsholdingDto } from './dto/create-accountsholding.dto';
-import { UpdateAccountsholdingDto } from './dto/update-accountsholding.dto';
-
+import { AccountsHoldings } from './entities/accountsholding.entity';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
+import { Payment } from 'src/payments/entities/payment.entity';
+import { CreatePaymentDto } from 'src/payments/dto/create-payment.dto';
 
 @ApiTags('Accounts-Holdings')
-@Controller('accounts-holdings')
+@Controller('accountsholdings')
 export class AccountsHoldingsController {
   constructor(private readonly accountsHoldingsService: AccountsHoldingsService) {}
 
+  // Crear una cuenta por cobrar o apartado (holding)
   @Post()
-  @ApiOperation({ summary: 'Create a new account or holding' })
-  @ApiResponse({ status: 201, description: 'The account or holding has been successfully created.' })
-  @ApiResponse({ status: 400, description: 'Bad Request.' })
-  create(@Body() createAccountsHoldingsDto: CreateAccountsholdingDto) {
-    return this.accountsHoldingsService.create(createAccountsHoldingsDto);
+  @ApiOperation({ summary: 'Crear una cuenta por cobrar o apartado (holding)' })
+  @ApiBody({ type: CreateAccountsholdingDto })
+  @ApiResponse({
+    status: 201,
+    description: 'La cuenta por cobrar o apartado ha sido creada con éxito',
+    type: AccountsHoldings,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Cliente o usuario no encontrados',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Stock insuficiente o uno o más productos no encontrados',
+  })
+  async create(@Body() createDto: CreateAccountsholdingDto): Promise<AccountsHoldings> {
+    return this.accountsHoldingsService.create(createDto);
   }
 
+  // Obtener todas las cuentas por cobrar o apartados
   @Get()
-  @ApiOperation({ summary: 'Get all accounts and holdings within a date range' })
-  @ApiQuery({ name: 'startDate', required: false })
-  @ApiQuery({ name: 'endDate', required: false })
-  @ApiResponse({ status: 200, description: 'List of accounts and holdings.' })
-  findAll(@Query('startDate') startDate: string, @Query('endDate') endDate: string) {
-    return this.accountsHoldingsService.findAll(startDate, endDate);
+  @ApiOperation({ summary: 'Obtener todas las cuentas por cobrar o apartados' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de todas las cuentas por cobrar o apartados',
+    type: [AccountsHoldings],
+  })
+  async findAll(): Promise<AccountsHoldings[]> {
+    return this.accountsHoldingsService.findAll();
   }
 
-  @Patch(':id')
-  @ApiOperation({ summary: 'Update an account or holding' })
-  @ApiResponse({ status: 200, description: 'The account or holding has been successfully updated.' })
-  @ApiResponse({ status: 404, description: 'Account or holding not found.' })
-  update(@Param('id') id: string, @Body() updateAccountsHoldingsDto: UpdateAccountsholdingDto) {
-    return this.accountsHoldingsService.update(+id, updateAccountsHoldingsDto);
+  // Obtener una cuenta por cobrar o apartado por su ID
+  @Get(':id')
+  @ApiOperation({ summary: 'Obtener una cuenta por cobrar o apartado por su ID' })
+  @ApiParam({ name: 'id', description: 'ID de la cuenta por cobrar' })
+  @ApiResponse({
+    status: 200,
+    description: 'Cuenta por cobrar encontrada',
+    type: AccountsHoldings,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Cuenta no encontrada',
+  })
+  async findOne(@Param('id') id: number): Promise<AccountsHoldings> {
+    return this.accountsHoldingsService.findOne(id);
   }
 
-  @Post(':id/pay')
-  @ApiOperation({ summary: 'Make a payment towards an account or holding' })
-  @ApiResponse({ status: 200, description: 'Payment successful.' })
-  @ApiResponse({ status: 404, description: 'Account or holding not found.' })
-  pay(@Param('id') id: string, @Body('amount') amount: number) {
-    return this.accountsHoldingsService.pay(+id, amount);
+  // Cancelar una reserva (apartado)
+  @Put(':id/cancel')
+  @ApiOperation({ summary: 'Cancelar una reserva (apartado)' })
+  @ApiParam({ name: 'id', description: 'ID de la cuenta por cobrar o apartado (holding)' })
+  @ApiResponse({
+    status: 200,
+    description: 'La reserva ha sido cancelada correctamente',
+    type: AccountsHoldings,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Cuenta no encontrada',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'La cuenta no es un apartado o ya ha sido cancelada',
+  })
+  async cancelReservation(@Param('id') id: number): Promise<AccountsHoldings> {
+    return this.accountsHoldingsService.cancelReservation(id);
   }
 }

@@ -1,0 +1,99 @@
+import { HttpException, HttpStatus, Inject, Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Payment } from './entities/payment.entity';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { CreatePaymentDto } from './dto/create-payment.dto';
+import { AccountsHoldings } from 'src/accountsholdings/entities/accountsholding.entity';
+import { OperationType } from 'src/common/enums/operation-type.enum';
+import { Product } from 'src/products/entities/product.entity';
+
+@Injectable()
+export class PaymentsService {
+    constructor(
+        @InjectRepository(Payment)
+        private paymentRepository: Repository<Payment>,
+        @InjectRepository(AccountsHoldings)
+        private accountHoldingRepository: Repository<AccountsHoldings>,
+        @InjectRepository(Product)
+        private productRepository: Repository<Product>,
+    ) {}
+
+    async create(createDto: CreatePaymentDto): Promise<Payment> {
+        const { amount, date, accountHoldingId } = createDto;
+    
+        // Buscar la cuenta asociada, incluyendo sus relaciones
+        const accountHolding = await this.accountHoldingRepository.findOne({
+            where: { id: accountHoldingId },
+            relations: ['payments', 'soldProducts', 'soldProducts.product'],
+        });
+        
+        if (!accountHolding) {
+            throw new NotFoundException(`Account holding with ID ${accountHoldingId} not found`);
+        }
+
+                // Logs para depuración
+                console.log('Monto del pago:', amount);
+                console.log('Saldo pendiente:', accountHolding.toPay);
+                console.log('Saldo pendiente (convertido a número):', Number(accountHolding.toPay));
+                console.log('accountHoldingId:', accountHoldingId);
+                console.log('accountHolding:', accountHolding);
+        
+        // Validar que el saldo pendiente sea mayor o igual al monto del pago
+        if (amount > Number(accountHolding.toPay)) {
+            throw new BadRequestException('The amount exceeds the pending balance');
+        }
+        
+
+        
+        // Crear el pago, asociándolo a la cuenta (pasamos el objeto completo)
+        const payment = this.paymentRepository.create({
+            amount,
+            date: new Date(date),
+            accountHolding, // Aquí se asocia la cuenta completa
+        });
+        
+        await this.paymentRepository.save(payment);
+        
+        // **Aseguramos que el pago se añada al array de pagos de la cuenta**
+        if (!accountHolding.payments) {
+            accountHolding.payments = [];
+        }
+        accountHolding.payments.push(payment);
+        
+        // Actualizar la cuenta
+        accountHolding.paid = Number(accountHolding.paid) + Number(amount);
+        accountHolding.toPay = Number(accountHolding.toPay) - Number(amount);
+        
+        // Si el pago es total y la operación es HOLDING, mover los productos reservados a vendidos
+        if (accountHolding.paid === accountHolding.total && accountHolding.type === OperationType.HOLDING) {
+            for (const soldProduct of accountHolding.soldProducts) {
+                const product = soldProduct.product;
+                product.reservedStock -= soldProduct.quantity; // Reducir el stock reservado
+                product.stock -= soldProduct.quantity; // Descontar el stock disponible
+                await this.productRepository.save(product);
+            }
+        }
+        
+        // Guardar la cuenta actualizada
+        await this.accountHoldingRepository.save(accountHolding);
+        
+        return payment;
+    }
+    
+
+    async findAll() {
+        return this.paymentRepository.find();
+    }
+
+    async findOne(id: number) {
+        return this.paymentRepository.findOne({
+            where: { id },
+        });
+    }
+
+    async findPaymentsByAccountHoldingId(accountHoldingId: number) {
+        return this.paymentRepository.find({
+            where: { accountHoldingId },
+        });
+    }
+}

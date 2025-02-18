@@ -27,6 +27,9 @@ export class Product {
   @Column({ type: 'int', nullable: false })
   stock: number;
 
+  @Column({type: 'int', nullable: false})
+  reservedStock: number;
+
   @Column({ type: 'boolean', nullable: true })
   wholesaleSale: boolean;
 
