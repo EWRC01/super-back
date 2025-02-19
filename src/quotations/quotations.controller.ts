@@ -18,11 +18,18 @@ export class QuotationsController {
 
   @Get()
   @ApiOperation({ summary: 'Get all quotations within a date range' })
-  @ApiQuery({ name: 'startDate', required: false })
-  @ApiQuery({ name: 'endDate', required: false })
+  @ApiQuery({ name: 'startDate', required: true })
+  @ApiQuery({ name: 'endDate', required: true })
   @ApiResponse({ status: 200, description: 'List of quotations.' })
   findAll(@Query('startDate') startDate: string, @Query('endDate') endDate: string) {
     return this.quotationsService.findAll(startDate, endDate);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get a quotation by ID'})
+  @ApiResponse({ status: 200, description: 'Quotation' })
+  findOne(@Param('id') id: string) {
+    return this.quotationsService.findOne(+id)
   }
 
   @Delete(':id')
