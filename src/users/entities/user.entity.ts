@@ -19,7 +19,7 @@ export class User {
   @Column({ type: 'varchar', length: 20, nullable: false })
   phone: string;
 
-  @Column({ type: 'varchar', length: 255, nullable: false, select: false })
+  @Column({ type: 'varchar', length: 255, nullable: false})
   password: string;
 
   @OneToMany(() => Sale, (sale) => sale.user, {onDelete: 'CASCADE'})
