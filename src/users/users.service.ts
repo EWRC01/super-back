@@ -37,20 +37,22 @@ export class UsersService {
   async loginUser(loginUserDto: LoginUserDto) {
     const user = await this.userRepository.findOne({
       where: { username: loginUserDto.username },
+      select: ['id', 'username', 'name', 'phone', 'password'], // Incluye la contraseña explícitamente
     });
-
+  
     if (!user) {
       throw new UnauthorizedException('Usuario no encontrado');
     }
-
+  
     const isPasswordValid = await bcrypt.compare(loginUserDto.password, user.password);
-
+  
     if (!isPasswordValid) {
       throw new UnauthorizedException('Credenciales incorrectas');
     }
-
+  
     return user;
   }
+  
 
   async getUserById(id: number) {
     const user = await this.userRepository.findOne({ where: { id } });
