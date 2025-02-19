@@ -8,6 +8,7 @@ import { SoldProduct } from 'src/soldproducts/entities/soldproduct.entity';
 import { User } from 'src/users/entities/user.entity';
 import { Customer } from 'src/customers/entities/customer.entity';
 import { PriceType } from '../common/enums/price-type.enum';
+import * as moment from 'moment-timezone';
 
 @Injectable()
 export class SalesService {
@@ -129,9 +130,15 @@ export class SalesService {
   }
 
   async findAll(startDate: string, endDate: string): Promise<Sale[]> {
+
+    const timeZone = "America/El_Salvador";
+
     return this.salesRepository.find({
       where: {
-        date: Between(new Date(startDate), new Date(endDate)),
+        date: Between(
+          moment.tz(`${startDate}T00:00:00`, timeZone).toDate(), 
+          moment.tz(`${endDate}T23:59:59`, timeZone).toDate(),
+        )
       },
       relations: ['products'],
     });
