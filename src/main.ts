@@ -1,9 +1,13 @@
-import { NestFactory } from '@nestjs/core';
+import { NestApplication, NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { join } from 'path';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestApplication>(AppModule);
+
+  app.useStaticAssets(join(__dirname, '..', 'uploads')),
+
   app.enableCors({
     origin: 'http://localhost:4000',
     methods: 'GET,POST,PATCH,PUT,DELETE,OPTIONS',

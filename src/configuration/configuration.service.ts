@@ -1,26 +1,30 @@
-import { Injectable } from '@nestjs/common';
-import { CreateConfigurationDto } from './dto/create-configuration.dto';
-import { UpdateConfigurationDto } from './dto/update-configuration.dto';
+// src/configuration/configuration.service.ts
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Configuration } from './entities/configuration.entity';
 
 @Injectable()
 export class ConfigurationService {
-  create(createConfigurationDto: CreateConfigurationDto) {
-    return 'This action adds a new configuration';
-  }
+  constructor(
+    @InjectRepository(Configuration)
+    private configurationRepository: Repository<Configuration>,
+  ) {}
 
-  findAll() {
-    return `This action returns all configuration`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} configuration`;
-  }
-
-  update(id: number, updateConfigurationDto: UpdateConfigurationDto) {
-    return `This action updates a #${id} configuration`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} configuration`;
+  /**
+   * Crea o actualiza la configuración.
+   * Si ya existe una configuración con el nombre dado, actualiza los campos; de lo contrario, la crea.
+   */
+  async createOrUpdateConfiguration(name: string, phone: string, logo: string): Promise<Configuration> {
+    let config = await this.configurationRepository.findOne({ where: { name } });
+    if (!config) {
+      config = this.configurationRepository.create({ name, phone, logo });
+    } else {
+      config.phone = phone;
+      if (logo) {
+        config.logo = logo;
+      }
+    }
+    return this.configurationRepository.save(config);
   }
 }
