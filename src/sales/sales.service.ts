@@ -9,6 +9,7 @@ import { User } from 'src/users/entities/user.entity';
 import { Customer } from 'src/customers/entities/customer.entity';
 import { PriceType } from '../common/enums/price-type.enum';
 import * as moment from 'moment-timezone';
+import { AccountsHoldings } from 'src/accountsholdings/entities/accountsholding.entity';
 
 @Injectable()
 export class SalesService {
@@ -23,6 +24,8 @@ export class SalesService {
     private userRepository: Repository<User>,
     @InjectRepository(Customer)
     private customerRepository: Repository<Customer>,
+    @InjectRepository(AccountsHoldings)
+    private accountsHoldingsRepository: Repository<AccountsHoldings>,
   ) {}
 
   async create(createSaleDto: CreateSaleDto): Promise<any> {
@@ -152,7 +155,7 @@ export class SalesService {
       .where('MONTH(sale.date) = :month AND YEAR(sale.date) = :year', { month, year })
       .groupBy('day')
       .getRawMany();
-    return result;
+    return result || 0;
   }
 
   async getMonthlySales(year: number): Promise<any> {
@@ -164,7 +167,7 @@ export class SalesService {
       .groupBy('month')
       .orderBy('month', 'ASC')
       .getRawMany();
-    return result;
+    return result || 0;
   }
 
   async getTotalIncome(): Promise<number> {
@@ -172,41 +175,79 @@ export class SalesService {
       .createQueryBuilder('sale')
       .select('SUM(sale.total)', 'totalIncome')
       .getRawOne();
-    return result.totalIncome;
+    return result.totalIncome || 0;
   }
 
   async getTodayIncome(): Promise<number> {
+
+    // Hacemos referencia a la zona horaria de El Salvador
+
+    const timezone = 'America/El_Salvador';
+    
+    // Definimos la hora de inicio y fin
+
+    const todayStart= moment().tz(timezone).startOf('day').toDate(); // Inicio del dia (00:00:00)
+    const todayEnd= moment().tz(timezone).endOf('day').toDate(); // Fin del dia (23:59:59)
+
+    //Query Builder para el ingreso total del día
+
     const result = await this.salesRepository
       .createQueryBuilder('sale')
       .select('SUM(sale.total)', 'totalIncome')
-      .where('DATE(sale.date) = CURDATE()')
+      .where('sale.date >= :todayStart', { todayStart })
+      .andWhere('sale.date <= :todayEnd', { todayEnd })
       .getRawOne();
-    return result.totalIncome;
+
+    return result.totalIncome || 0; // Retornamos 0 si no hay ventas
   }
 
   async getWeeklyIncome(): Promise<number> {
+
+    // Hacemos referencia a la zona horaria de El Salvador
+    const timeZone = 'America/El_Salvador';
+    const now = moment().tz(timeZone);
+
+    // Calcular el inicio de la semana
+
+    const weekStart = now.startOf('week').toDate(); // Inicio de la semana (Domingo)
+    const weekEnd = now.endOf('week').toDate(); // Fin de la semana (Sábado)
+
+    // Usar Query Builder para obtener el ingreso total de la semana
     const result = await this.salesRepository
       .createQueryBuilder('sale')
       .select('SUM(sale.total)', 'totalIncome')
-      .where('WEEK(sale.date) = WEEK(NOW())')
+      .where('sale.date >= :weekStart', { weekStart })
+      .andWhere('sale.date <= :weekEnd', { weekEnd })
       .getRawOne();
-    return result.totalIncome;
+    return result.totalIncome || 0; // Retornar 0 si no hay ventas
   }
 
   async getMonthlyIncome(): Promise<number> {
+
+    // Hacemos referencia a la zona horaria de El Salvador
+    const timeZone = 'America/El_Salvador';
+    const now = moment().tz(timeZone);
+
+    // Calcular el inicio y fin del mes
+    const monthStart = now.startOf('month').toDate(); // Inicio del mes
+    const monthEnd = now.endOf('month').toDate(); // Fin del mes
+
     const result = await this.salesRepository
       .createQueryBuilder('sale')
       .select('SUM(sale.total)', 'totalIncome')
-      .where('MONTH(sale.date) = MONTH(CURRENT_DATE()) AND YEAR(sale.date) = YEAR(CURRENT_DATE())')
+      .where('sale.date >= :monthStart', { monthStart })
+      .andWhere('sale.date <= :monthEnd', { monthEnd })
       .getRawOne();
-    return result.totalIncome;
+    return result.totalIncome || 0; // Retornar 0 si no hay ventas
   }
 
   async getPendingIncome(): Promise<number> {
-    const result = await this.salesRepository
-      .createQueryBuilder('sale')
-      .select('SUM(sale.total - sale.paid)', 'pendingIncome')
+    const result = await this.accountsHoldingsRepository
+      .createQueryBuilder('account')
+      .select('SUM(account.toPay)', 'pendingIncome')
+      .where('account.type = :type', { type: 'account' }) // Filtra solo las cuentas por cobrar
       .getRawOne();
-    return result.pendingIncome;
+  
+    return result.pendingIncome || 0;
   }
 }
