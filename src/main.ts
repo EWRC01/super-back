@@ -25,6 +25,7 @@ async function bootstrap() {
 
   document.tags = [
     { name: 'Users', description: 'Endpoints related to Users' },
+    {name: 'Cash-Register', description: 'Endpoints related to Cash Registers'},
     { name: 'Customers' , description: 'Endpoints related to Customers' },
     { name: 'Brands', description: 'Endpoints related to Brands' },
     { name: 'Categories', description: 'Endpoints related to Categories' },

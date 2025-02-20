@@ -3,7 +3,7 @@ import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { Sale } from '../../sales/entities/sale.entity';
 import { Quotation } from '../../quotations/entities/quotation.entity';
 import { AccountsHoldings } from 'src/accountsholdings/entities/accountsholding.entity';
-import { Exclude } from 'class-transformer';
+import { CashRegister } from 'src/cash-register/entities/cash-register.entity';
 
 @Entity('users')
 export class User {
@@ -30,4 +30,7 @@ export class User {
 
   @OneToMany(() => Quotation, (quotation) => quotation.user, {onDelete: 'CASCADE'})
   quotations: Quotation[];
+
+  @OneToMany(() => CashRegister, (cashRegister) => cashRegister.user)
+  cashRegisters: CashRegister[];
 }
