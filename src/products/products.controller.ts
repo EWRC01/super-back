@@ -86,14 +86,22 @@ export class ProductsController {
     return this.productsService.getStockByProduct(parsedIdentifier);
   }
 
-  @Get('/inventory-total')
+  @Get('product-stock/inventory-total-stock/')
+  @ApiOperation({summary: 'Get total stock of products'})
+  @ApiResponse({status: 200, description: 'Get total stock of products'})
+  @ApiBadRequestResponse({description: 'Error'})
+  async getTotalStock() {
+    return this.productsService.getTotalProducts();
+  }
+
+  @Get('product-stock/inventory-total/')
   @ApiOperation({ summary: 'Get total inventory value' })
   @ApiResponse({ status: 200, description: 'Total inventory value returned' })
   async getAllStock() {
     return this.productsService.getAllStock();
   }
 
-  @Get('/inventory-profit')
+  @Get('product-stock/inventory-profit/')
   @ApiOperation({ summary: 'Get total profit from inventory' })
   @ApiResponse({ status: 200, description: 'Total profit returned' })
   async getInventoryProfit() {
