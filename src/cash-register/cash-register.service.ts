@@ -6,6 +6,7 @@ import { Sale } from 'src/sales/entities/sale.entity'; // Asegúrate de importar
 import { User } from 'src/users/entities/user.entity'; // Asegúrate de importar la entidad User
 import * as moment from 'moment-timezone';
 import { Payment } from 'src/payments/entities/payment.entity';
+import { OpenCashRegisterDto } from './dto/open-cash-register.dto';
 
 @Injectable()
 export class CashRegisterService {
@@ -19,6 +20,31 @@ export class CashRegisterService {
     @InjectRepository(Payment)
     private paymentRepository: Repository<Payment>,
   ) {}
+
+
+  async openCashRegister(userId: number, openCashRegisterDto: OpenCashRegisterDto): Promise<CashRegister> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+  
+    if (!user) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    }
+  
+    const timezone = 'America/El_Salvador';
+    const currentDate = moment().tz(timezone).toDate(); // Obtener la fecha con la zona horaria correcta
+  
+    const { initialCash } = openCashRegisterDto;
+  
+    const cashRegister = new CashRegister();
+    cashRegister.date = currentDate; // Fecha con zona horaria
+    cashRegister.cashInHand = initialCash;
+    cashRegister.totalSales = 0;
+    cashRegister.totalPayments = 0;
+    cashRegister.expectedCash = 0;
+    cashRegister.discrepancy = 0;
+    cashRegister.user = { id: userId } as User;
+  
+    return this.cashRegisterRepository.save(cashRegister);
+  }
 
   async closeCashRegister(userId: number, cashInHand: number): Promise<CashRegister> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
