@@ -5,7 +5,7 @@ import { CloseCashRegisterDto } from './dto/close-cash-register.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 
 @ApiTags('Cash-Register')
-@Controller('Cash-Register')
+@Controller('cash-register')
 export class CashRegisterController {
   constructor(private readonly cashRegisterService: CashRegisterService) {}
 
