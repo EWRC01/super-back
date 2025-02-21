@@ -47,11 +47,12 @@ export class ProductsController {
     return this.productsService.getPriceByID(+id)
   }
 
-  @Get('price-tourist/:id')
+  
   @ApiOperation({ summary: 'Get product tourist price by ID' })
   @ApiParam({ name: 'id', type: 'number', description: 'Product ID' })
   @ApiResponse({ status: 200, description: 'Product found' })
   @ApiBadRequestResponse({ description: 'Product not found' })
+  @Get('price-tourist/:id')
   async getTouristPrice(@Param('id') id: number) {
     return this.productsService.getTouristPriceByID(+id)
   }

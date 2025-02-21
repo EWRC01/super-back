@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Product } from './entities/product.entity';
@@ -145,9 +145,22 @@ export class ProductsService {
    * Actualiza los datos de un producto.
    */
   async update(id: number, updateProductDto: UpdateProductDto) {
-    await this.findOne(id);
-    await this.productRepository.update(id, updateProductDto);
-    return this.findOne(id);
+
+    const category = await this.categoryRepository.findOne({ where: { id: updateProductDto.categoryId } });
+    const brand = await this.brandRepository.findOne({ where: { id: updateProductDto.brandId } });
+    const product = await this.productRepository.findOne({where: {id: id}});
+
+    if (!product) { throw new HttpException(`Product with ID: ${id} Not Found!`, HttpStatus.NOT_FOUND)};
+
+    if (!category && !brand) throw new HttpException('Categoria y Marca no encontradas', HttpStatus.NOT_FOUND);
+    if (!category) throw new HttpException('Categoria no encontrada', HttpStatus.NOT_FOUND);
+    if (!brand) throw new HttpException('Marca no encontrada', HttpStatus.NOT_FOUND);
+
+    Object.assign(product, updateProductDto);
+    product.category = category;
+    product.brand = brand;
+
+    return await this.productRepository.save(product);
   }
 
   /**
