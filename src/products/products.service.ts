@@ -129,8 +129,21 @@ export class ProductsService {
    * Busca productos por nombre o código.
    */
   async findByNameOrCode(term: string) {
-    return await this.productRepository.find({ where: [{ code: term }, { name: term }], relations: ['brand', 'category'] });
+    const query = this.productRepository.createQueryBuilder('product')
+      .leftJoinAndSelect('product.brand', 'brand')
+      .leftJoinAndSelect('product.category', 'category')
+      .where('product.code = :term', { term })
+      .orWhere('LOWER(product.name) LIKE LOWER(:search)', { search: `%${term}%` });
+  
+    const products = await query.getMany();
+  
+    if (products.length === 0) {
+      throw new HttpException('Product Not Found!', HttpStatus.NOT_FOUND);
+    }
+  
+    return products;
   }
+  
 
   /**
    * Obtiene un producto por su ID.
