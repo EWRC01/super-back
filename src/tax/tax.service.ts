@@ -1,40 +1,76 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Between } from 'typeorm';
 import { Sale } from 'src/sales/entities/sale.entity';
+import { SoldProduct } from 'src/soldproducts/entities/soldproduct.entity';
 import * as moment from 'moment-timezone';
 
 @Injectable()
 export class TaxService {
   constructor(
-    @InjectRepository(Sale)
-    private readonly salesRepository: Repository<Sale>,
+    @InjectRepository(Sale) private readonly saleRepository: Repository<Sale>,
+    @InjectRepository(SoldProduct) private readonly soldProductRepository: Repository<SoldProduct>,
   ) {}
 
   /**
-   * Obtiene el total del IVA generado en un mes específico.
-   * @param year Año de consulta
-   * @param month Mes de consulta (1-12)
-   * @returns Total del IVA generado en el mes
+   * Obtiene el IVA total recaudado en un mes específico
    */
-  async getMonthlyTax(year: number, month: number): Promise<{ year: number; month: number; totalIVA: number }> {
-    // Definir la zona horaria correcta (El Salvador)
-    const timezone = 'America/El_Salvador';
+  async getMonthlyIVA(year: number, month: number) {
+    const startDate = moment.tz(`${year}-${month}-01`, 'America/El_Salvador').startOf('month').toDate();
+    const endDate = moment.tz(`${year}-${month}-01`, 'America/El_Salvador').endOf('month').toDate();
 
-    // Definir el rango del mes en la zona horaria correcta
-    const startDate = moment.tz({ year, month: month - 1, day: 1 }, timezone).startOf('day').toDate();
-    const endDate = moment.tz({ year, month: month - 1 }, timezone).endOf('month').toDate();
+    const sales = await this.saleRepository.find({
+      where: { date: Between(startDate, endDate) },
+      relations: ['soldProducts'],
+    });
 
-    const totalIVA = await this.salesRepository
-      .createQueryBuilder('sale')
-      .select('SUM(sale.totalIVA)', 'totalIVA')
-      .where('sale.date BETWEEN :startDate AND :endDate', { startDate, endDate })
-      .getRawOne();
+    let totalIVA = 0;
+    let totalSales = 0;
+
+    for (const sale of sales) {
+      for (const soldProduct of sale.products) {
+        const iva = soldProduct.price * 0.13; // IVA del 13%
+        totalIVA += iva * soldProduct.quantity;
+        totalSales += soldProduct.price * soldProduct.quantity;
+      }
+    }
 
     return {
-      year,
       month,
-      totalIVA: totalIVA?.totalIVA || 0, // Si no hay ventas, devuelve 0
+      year,
+      totalIVA: totalIVA.toFixed(2),
+      totalSales: totalSales.toFixed(2),
+    };
+  }
+
+  /**
+   * Obtiene el IVA recaudado en un rango de fechas
+   */
+  async getIVAByDateRange(startDate: string, endDate: string) {
+    const start = moment.tz(startDate, 'America/El_Salvador').startOf('day').toDate();
+    const end = moment.tz(endDate, 'America/El_Salvador').endOf('day').toDate();
+
+    const sales = await this.saleRepository.find({
+      where: { date: Between(start, end) },
+      relations: ['soldProducts'],
+    });
+
+    let totalIVA = 0;
+    let totalSales = 0;
+
+    for (const sale of sales) {
+      for (const soldProduct of sale.products) {
+        const iva = soldProduct.price * 0.13;
+        totalIVA += iva * soldProduct.quantity;
+        totalSales += soldProduct.price * soldProduct.quantity;
+      }
+    }
+
+    return {
+      startDate,
+      endDate,
+      totalIVA: totalIVA.toFixed(2),
+      totalSales: totalSales.toFixed(2),
     };
   }
 }
