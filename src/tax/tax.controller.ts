@@ -3,7 +3,7 @@ import { ApiOperation, ApiResponse, ApiTags, ApiQuery } from '@nestjs/swagger';
 import { TaxService } from './tax.service';
 
 @ApiTags('IVA') // Categoriza este controlador en Swagger
-@Controller('tax')
+@Controller('Tax')
 export class TaxController {
   constructor(private readonly taxService: TaxService) {}
 
