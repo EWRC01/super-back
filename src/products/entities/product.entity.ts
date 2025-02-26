@@ -9,7 +9,7 @@ export class Product {
   @PrimaryGeneratedColumn({ unsigned: true })
   id: number;
 
-  @Column({ type: 'varchar', length: 50, nullable: false })
+  @Column({ type: 'varchar', length: 50, nullable: false, unique: true })
   code: string;
 
   @Column({ type: 'varchar', length: 255, nullable: false })
