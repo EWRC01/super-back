@@ -14,7 +14,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { PaymentsModule } from './payments/payments.module';
 import { QuotationProductsModule } from './quotation-products/quotation-products.module';
 import { CashRegisterModule } from './cash-register/cash-register.module';
-
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -42,7 +41,10 @@ import { CashRegisterModule } from './cash-register/cash-register.module';
     AccountsholdingsModule, 
     SoldproductsModule, 
     QuotationsModule, 
-    ConfigurationModule, PaymentsModule, QuotationProductsModule, CashRegisterModule
+    ConfigurationModule, 
+    PaymentsModule, 
+    QuotationProductsModule, 
+    CashRegisterModule
   ],
 })
 export class AppModule {}

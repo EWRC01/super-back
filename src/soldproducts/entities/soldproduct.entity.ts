@@ -15,6 +15,12 @@ export class SoldProduct {
   @Column({ type: 'decimal', precision: 8, scale: 2, nullable: false })
   price: number;
 
+  @Column({ type: 'decimal', precision: 8, scale: 2, nullable: false })
+  priceWithouthIVA: number;
+
+  @Column({ type: 'decimal', precision: 8, scale: 2, nullable: false }) 
+  iva: number;
+
   @Column({ type: 'bigint', unsigned: true, nullable: false })
   productId: number;
 

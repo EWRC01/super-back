@@ -22,6 +22,11 @@ export class SoldProductsService {
     private readonly categoryRepository: Repository<Category>,
   ) {}
 
+  // 0. Obtener todos los productos vendidos
+  async find(): Promise<SoldProduct[]> {
+    return await this.soldProductRepository.find();
+  }
+
   // 1. Obtener productos vendidos por ID y tipo
   async getSoldProductsByIdAndType(id: number, type: string): Promise<any[]> {
     const products = await this.soldProductRepository
@@ -30,11 +35,13 @@ export class SoldProductsService {
       .select([
         'soldProduct.quantity',
         'soldProduct.price',
+        'soldProduct.priceWithouthIVA',
+        'soldProduct.iva',
         'product.name',
         'product.purchasePrice',
         'product.id',
       ])
-      .where('soldProduct.referenceId = :id AND soldProduct.type = :type', { id, type })
+      .where('soldProduct.id = :id AND soldProduct.type = :type', { id, type })
       .getRawMany();
 
     if (!products.length) {

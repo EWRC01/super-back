@@ -36,6 +36,14 @@ export class SoldProductsController {
     }
   }
 
+  @Get()
+  @ApiOperation({ summary: 'Obtener todos los productos vendidos' })
+  @ApiResponse({ status: 200, description: 'Lista de productos vendidos.' })  
+  @ApiResponse({ status: 404, description: 'No se encontraron productos vendidos.' })
+  async find() {
+    return this.soldProductsService.find();
+  }
+
   @Get(':id/:type')
   @ApiOperation({ summary: 'Obtener productos vendidos por ID y tipo' })
   @ApiParam({ name: 'id', description: 'ID de referencia', example: 1 })

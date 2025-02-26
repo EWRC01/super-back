@@ -12,7 +12,13 @@ export class Sale {
   date: Date;
 
   @Column({ type: 'decimal', precision: 9, scale: 2, nullable: false })
-  total: number;
+  totalWithIVA: number;
+
+  @Column({ type: 'decimal', precision: 9, scale: 2, nullable: false })
+  totalWithoutIVA: number;
+
+  @Column({ type: 'decimal', precision: 9, scale: 2, nullable: false })
+  totalIVA: number;
 
   @Column({ type: 'decimal', precision: 9, scale: 2, nullable: false })
   paid: number;

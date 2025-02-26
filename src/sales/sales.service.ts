@@ -41,8 +41,14 @@ export class SalesService {
       throw new NotFoundException(`Customer with ID: ${createSaleDto.customerId} not found!`);
     }
   
-    // Calcular el total de la venta
-    let total = 0;
+    let totalWithIVA = 0;
+    let totalWithoutIVA = 0;
+    let totalIVA = 0;
+  
+    // Lista para registrar los productos vendidos
+    const soldProducts = [];
+  
+    // Procesar cada producto en la venta
     for (const product of createSaleDto.products) {
       const productExists = await this.productsRepository.findOne({ where: { id: product.productId } });
       if (!productExists) {
@@ -65,12 +71,31 @@ export class SalesService {
           throw new BadRequestException(`Tipo de precio no válido: ${product.priceType}`);
       }
   
-      // Sumar al total
-      total += price * product.quantity;
+      // Calcular IVA y total sin IVA
+      const priceWithouthIVA = price / 1.13; // Asumiendo 13% de IVA
+      const iva = price - priceWithouthIVA;
+  
+      // Actualizar totales generales
+      totalWithIVA += price * product.quantity;
+      totalWithoutIVA += priceWithouthIVA * product.quantity;
+      totalIVA += iva * product.quantity;
+  
+      // Registrar el producto vendido
+      const soldProduct = this.soldProductsRepository.create({
+        quantity: product.quantity,
+        price, // Precio con IVA
+        priceWithouthIVA, // Precio sin IVA
+        iva: iva, // IVA aplicado
+        productId: product.productId,
+        saleId: null, // Se asignará después de guardar la venta
+        type: 'sale',
+      });
+  
+      soldProducts.push(soldProduct);
     }
   
     // Validar que el monto pagado sea suficiente
-    if (createSaleDto.paid < total) {
+    if (createSaleDto.paid < totalWithIVA) {
       throw new BadRequestException('El monto pagado es insuficiente.');
     }
   
@@ -79,58 +104,40 @@ export class SalesService {
       ...createSaleDto,
       user,
       customer,
-      total, // Asignar el total calculado
+      totalWithIVA,
+      totalWithoutIVA,
+      totalIVA,
     });
+  
     const savedSale = await this.salesRepository.save(sale);
   
-    // Registrar los productos vendidos y actualizar el stock
-    for (const product of createSaleDto.products) {
-      const productExists = await this.productsRepository.findOne({ where: { id: product.productId } });
-  
-      // Seleccionar el precio según el tipo
-      let price: number;
-      switch (product.priceType) {
-        case PriceType.SALE:
-          price = productExists.salePrice;
-          break;
-        case PriceType.WHOLESALE:
-          price = productExists.wholesalePrice;
-          break;
-        case PriceType.TOURIST:
-          price = productExists.touristPrice;
-          break;
-        default:
-          throw new BadRequestException(`Tipo de precio no válido: ${product.priceType}`);
-      }
-  
-      const soldProduct = this.soldProductsRepository.create({
-        quantity: product.quantity,
-        price, // Usar el precio seleccionado
-        productId: product.productId,
-        saleId: savedSale.id,
-        type: 'sale',
-      });
+    // Guardar los productos vendidos con la venta asociada
+    for (const soldProduct of soldProducts) {
+      soldProduct.saleId = savedSale.id;
       await this.soldProductsRepository.save(soldProduct);
   
       // Actualizar el stock del producto
       await this.productsRepository.decrement(
-        { id: product.productId },
+        { id: soldProduct.productId },
         'stock',
-        product.quantity,
+        soldProduct.quantity,
       );
     }
   
     // Calcular el cambio
-    const change = createSaleDto.paid - total;
+    const change = createSaleDto.paid - totalWithIVA;
   
     // Retornar una respuesta más completa
     return {
       ...savedSale,
-      total,
+      totalWithIVA,
+      totalWithoutIVA,
+      totalIVA,
       paid: createSaleDto.paid,
       change,
     };
   }
+  
 
   async findAll(startDate: string, endDate: string): Promise<Sale[]> {
 
