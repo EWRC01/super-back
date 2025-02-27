@@ -61,7 +61,7 @@ export class CashRegisterService {
     // Calcular el total de ventas del día
     const salesResult = await this.saleRepository
       .createQueryBuilder('sale')
-      .select('SUM(sale.total)', 'totalSales')
+      .select('SUM(sale.totalWithIVA)', 'totalSales')
       .where('sale.date BETWEEN :todayStart AND :todayEnd', { todayStart, todayEnd })
       .getRawOne();
   
