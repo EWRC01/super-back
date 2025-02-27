@@ -158,7 +158,7 @@ export class SalesService {
     const result = await this.salesRepository
       .createQueryBuilder('sale')
       .select("DATE_FORMAT(sale.date, '%Y-%m-%d')", 'day')
-      .addSelect('SUM(sale.total)', 'totalSales')
+      .addSelect('SUM(sale.totalWithIVA)', 'totalSales')
       .where('MONTH(sale.date) = :month AND YEAR(sale.date) = :year', { month, year })
       .groupBy('day')
       .getRawMany();
@@ -169,7 +169,7 @@ export class SalesService {
     const result = await this.salesRepository
       .createQueryBuilder('sale')
       .select('MONTH(sale.date)', 'month')
-      .addSelect('SUM(sale.total)', 'totalSales')
+      .addSelect('SUM(sale.totalWithIVA)', 'totalSales')
       .where('YEAR(sale.date) = :year', { year })
       .groupBy('month')
       .orderBy('month', 'ASC')
@@ -180,7 +180,7 @@ export class SalesService {
   async getTotalIncome(): Promise<number> {
     const result = await this.salesRepository
       .createQueryBuilder('sale')
-      .select('SUM(sale.total)', 'totalIncome')
+      .select('SUM(sale.totalWithIVA)', 'totalIncome')
       .getRawOne();
     return result.totalIncome || 0;
   }
@@ -200,7 +200,7 @@ export class SalesService {
 
     const result = await this.salesRepository
       .createQueryBuilder('sale')
-      .select('SUM(sale.total)', 'totalIncome')
+      .select('SUM(sale.totalWithIVA)', 'totalIncome')
       .where('sale.date >= :todayStart', { todayStart })
       .andWhere('sale.date <= :todayEnd', { todayEnd })
       .getRawOne();
@@ -222,7 +222,7 @@ export class SalesService {
     // Usar Query Builder para obtener el ingreso total de la semana
     const result = await this.salesRepository
       .createQueryBuilder('sale')
-      .select('SUM(sale.total)', 'totalIncome')
+      .select('SUM(sale.totalWithIVA)', 'totalIncome')
       .where('sale.date >= :weekStart', { weekStart })
       .andWhere('sale.date <= :weekEnd', { weekEnd })
       .getRawOne();
@@ -241,7 +241,7 @@ export class SalesService {
 
     const result = await this.salesRepository
       .createQueryBuilder('sale')
-      .select('SUM(sale.total)', 'totalIncome')
+      .select('SUM(sale.totalWithIVA)', 'totalIncome')
       .where('sale.date >= :monthStart', { monthStart })
       .andWhere('sale.date <= :monthEnd', { monthEnd })
       .getRawOne();
