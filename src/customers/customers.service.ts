@@ -54,7 +54,7 @@ export class CustomersService {
     return this.customersRepository
       .createQueryBuilder('customer')
       .select('customer.id', 'id')
-      .addSelect('SUM(sale.total)', 'totalSales')
+      .addSelect('SUM(sale.totalWithIVA)', 'totalSales')
       .leftJoin('customer.sales', 'sale')
       .groupBy('customer.id')
       .getRawMany();
