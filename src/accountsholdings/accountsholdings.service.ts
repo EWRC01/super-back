@@ -103,6 +103,8 @@ export class AccountsHoldingsService {
           product,
           quantity: item.quantity,
           price, // Precio obtenido del producto
+          priceWithouthIVA: price / 1.13, // Precio sin IVA (asumiendo 13%),
+          iva: price - (price / 1.13), // IVA aplicado
           type: OperationType.ACCOUNT,
           accountHolding,
         });
