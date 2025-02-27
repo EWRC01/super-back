@@ -119,7 +119,7 @@ export class UsersService {
       // Consultar las ventas del mes para el usuario específico
       const result = await this.saleRepository
         .createQueryBuilder('sale')
-        .select('SUM(sale.total)', 'totalSales')
+        .select('SUM(sale.totalWithIVA)', 'totalSales')
         .where('sale.date >= :monthStart AND sale.date <= :monthEnd', { monthStart, monthEnd })
         .andWhere('sale.userId = :userId', { userId })
         .getRawOne();
@@ -142,7 +142,7 @@ export class UsersService {
 
     const salesIncome = await this.saleRepository
       .createQueryBuilder('sale')
-      .select('SUM(sale.total)', 'totalIncome')
+      .select('SUM(sale.totalWithIVA)', 'totalIncome')
       .where('sale.userId = :userId', { userId })
       .getRawOne();
 
@@ -172,7 +172,7 @@ export class UsersService {
     // Consultar las ventas del día para el usuario específico
     const salesIncome = await this.saleRepository
       .createQueryBuilder('sale')
-      .select('SUM(sale.total)', 'totalIncome')
+      .select('SUM(sale.totalWithIVA)', 'totalIncome')
       .where('sale.date >= :todayStart AND sale.date <= :todayEnd', { todayStart, todayEnd })
       .andWhere('sale.userId = :userId', { userId })
       .getRawOne();
@@ -206,7 +206,7 @@ export class UsersService {
     // Consultar las ventas de la semana para el usuario específico
     const salesIncome = await this.saleRepository
       .createQueryBuilder('sale')
-      .select('SUM(sale.total)', 'totalIncome')
+      .select('SUM(sale.totalWithIVA)', 'totalIncome')
       .where('sale.date >= :weekStart AND sale.date <= :weekEnd', { weekStart, weekEnd })
       .andWhere('sale.userId = :userId', { userId })
       .getRawOne();
@@ -240,7 +240,7 @@ export class UsersService {
     // Consultar las ventas del mes para el usuario específico
     const salesIncome = await this.saleRepository
       .createQueryBuilder('sale')
-      .select('SUM(sale.total)', 'totalIncome')
+      .select('SUM(sale.totalWithIVA)', 'totalIncome')
       .where('sale.date >= :monthStart AND sale.date <= :monthEnd', { monthStart, monthEnd })
       .andWhere('sale.userId = :userId', { userId })
       .getRawOne();
@@ -262,7 +262,7 @@ export class UsersService {
     const result = await this.saleRepository
       .createQueryBuilder('sale')
       .select('user.username', 'username')
-      .addSelect('SUM(sale.total)', 'totalSales')
+      .addSelect('SUM(sale.totalWithIVA)', 'totalSales')
       .innerJoin('sale.user', 'user')
       .groupBy('user.id')
       .getRawMany();
