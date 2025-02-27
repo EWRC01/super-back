@@ -51,7 +51,7 @@ export class CustomersController {
   @Get('sales-by-customer/:id')
   @ApiOperation({ summary: 'Get sales by customer' })
   @ApiResponse({ status: 200, description: 'Sales data by customer.' })
-  getSalesByCustomer(id: number) {
+  getSalesByCustomer(@Param('id') id: number) {
     return this.customersService.getSalesByCustomer(+id);
   }
 
