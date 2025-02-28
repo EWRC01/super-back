@@ -27,4 +27,11 @@ export class CreatePaymentDto {
     type: Number,
   })
   accountHoldingId: number;
+
+  @ApiProperty({
+    description: 'ID del usuario que realiza el pago',
+    example: 1,
+    type: Number,
+  })
+  customerId: number;
 }

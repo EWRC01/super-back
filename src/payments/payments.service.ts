@@ -19,51 +19,53 @@ export class PaymentsService {
     ) {}
 
     async create(createDto: CreatePaymentDto): Promise<Payment> {
-        const { amount, date, accountHoldingId } = createDto;
+        const { amount, date, accountHoldingId, customerId } = createDto;
     
         // Buscar la cuenta asociada, incluyendo sus relaciones
         const accountHolding = await this.accountHoldingRepository.findOne({
             where: { id: accountHoldingId },
-            relations: ['payments', 'soldProducts', 'soldProducts.product'],
+            relations: ['payments', 'soldProducts', 'soldProducts.product', 'customer'],
         });
-        
+    
         if (!accountHolding) {
             throw new NotFoundException(`Account holding with ID ${accountHoldingId} not found`);
         }
-
-                // Logs para depuración
-                console.log('Monto del pago:', amount);
-                console.log('Saldo pendiente:', accountHolding.toPay);
-                console.log('Saldo pendiente (convertido a número):', Number(accountHolding.toPay));
-                console.log('accountHoldingId:', accountHoldingId);
-                console.log('accountHolding:', accountHolding);
-        
+    
+        // **Verificar que la cuenta pertenece al cliente correcto**
+        if (accountHolding.customer.id !== customerId) {
+            throw new BadRequestException('This account holding does not belong to the provided customer');
+        }
+    
+        // Logs para depuración
+        console.log('Monto del pago:', amount);
+        console.log('Saldo pendiente:', accountHolding.toPay);
+        console.log('accountHoldingId:', accountHoldingId);
+        console.log('customerId:', customerId);
+    
         // Validar que el saldo pendiente sea mayor o igual al monto del pago
         if (amount > Number(accountHolding.toPay)) {
             throw new BadRequestException('The amount exceeds the pending balance');
         }
-        
-
-        
-        // Crear el pago, asociándolo a la cuenta (pasamos el objeto completo)
+    
+        // Crear el pago
         const payment = this.paymentRepository.create({
             amount,
             date: new Date(date),
-            accountHolding, // Aquí se asocia la cuenta completa
+            accountHolding,
         });
-        
+    
         await this.paymentRepository.save(payment);
-        
-        // **Aseguramos que el pago se añada al array de pagos de la cuenta**
+    
+        // Asegurar que el pago se añade al array de pagos de la cuenta
         if (!accountHolding.payments) {
             accountHolding.payments = [];
         }
         accountHolding.payments.push(payment);
-        
-        // Actualizar la cuenta
+    
+        // Actualizar el estado de la cuenta
         accountHolding.paid = Number(accountHolding.paid) + Number(amount);
         accountHolding.toPay = Number(accountHolding.toPay) - Number(amount);
-        
+    
         // Si el pago es total y la operación es HOLDING, mover los productos reservados a vendidos
         if (accountHolding.paid === accountHolding.total && accountHolding.type === OperationType.HOLDING) {
             for (const soldProduct of accountHolding.soldProducts) {
@@ -73,14 +75,13 @@ export class PaymentsService {
                 await this.productRepository.save(product);
             }
         }
-        
+    
         // Guardar la cuenta actualizada
         await this.accountHoldingRepository.save(accountHolding);
-        
+    
         return payment;
     }
     
-
     async findAll() {
         return this.paymentRepository.find();
     }
