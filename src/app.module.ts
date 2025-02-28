@@ -17,6 +17,8 @@ import { CashRegisterModule } from './cash-register/cash-register.module';
 import { TaxController } from './tax/tax.controller';
 import { TaxService } from './tax/tax.service';
 import { TaxModule } from './tax/tax.module';
+import { EmployeesModule } from './employees/employees.module';
+import { EmployeePaymentsModule } from './employee-payments/employee-payments.module';
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -48,7 +50,7 @@ import { TaxModule } from './tax/tax.module';
     PaymentsModule, 
     QuotationProductsModule, 
     CashRegisterModule, 
-    TaxModule
+    TaxModule, EmployeesModule, EmployeePaymentsModule
   ],
   controllers: [],
   providers: [],
