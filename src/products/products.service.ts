@@ -24,6 +24,9 @@ export class ProductsService {
   async create(createProductDto: CreateProductDto) {
     const category = await this.categoryRepository.findOne({ where: { id: createProductDto.categoryId } });
     const brand = await this.brandRepository.findOne({ where: { id: createProductDto.brandId } });
+    const barcode = await this.productRepository.findOne({ where: { code: createProductDto.code } });
+
+    if (barcode) throw new BadRequestException('El código de barras ya está en uso');
 
     if (!category && !brand) throw new NotFoundException('Categoria y Marca no encontradas');
     if (!category) throw new NotFoundException('Categoria no encontrada');
