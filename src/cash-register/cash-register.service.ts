@@ -1,12 +1,13 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 import { CashRegister } from './entities/cash-register.entity';
 import { Sale } from 'src/sales/entities/sale.entity'; // Asegúrate de importar la entidad Sale
 import { User } from 'src/users/entities/user.entity'; // Asegúrate de importar la entidad User
 import * as moment from 'moment-timezone';
 import { Payment } from 'src/payments/entities/payment.entity';
 import { OpenCashRegisterDto } from './dto/open-cash-register.dto';
+import { StateCashRegister } from 'src/common/enums/cash-register-state.enum';
 
 @Injectable()
 export class CashRegisterService {
@@ -41,6 +42,7 @@ export class CashRegisterService {
     cashRegister.totalPayments = 0;
     cashRegister.expectedCash = 0;
     cashRegister.discrepancy = 0;
+    cashRegister.state = StateCashRegister.OPEN;
     cashRegister.user = { id: userId } as User;
   
     return this.cashRegisterRepository.save(cashRegister);
@@ -88,15 +90,49 @@ export class CashRegisterService {
     cashRegister.totalPayments = totalPayments;
     cashRegister.expectedCash = expectedCash;
     cashRegister.discrepancy = discrepancy;
+    cashRegister.state = StateCashRegister.CLOSED;
     cashRegister.user = { id: userId } as User;
   
     return this.cashRegisterRepository.save(cashRegister);
   }
-  
 
+  // Mostrar todos los registros de caja
+  
   async find(): Promise<CashRegister[]> {
     return this.cashRegisterRepository.find(
       {relations: ['user']}
     );
+  }
+
+  async findByUserandDate(userId: number, dateString: string) {
+    const userFind = await this.userRepository.findOne({ where: { id: userId }});
+  
+    if (!userFind) { 
+      throw new HttpException(`Usuario no encontrado`, HttpStatus.NOT_FOUND);
+    }
+  
+    // 1. Definir la zona horaria (ej: 'America/Mexico_City')
+    const timezone = 'America/El_Salvador';
+    
+    // 2. Parsear la fecha con moment-timezone
+    const date = moment.tz(dateString, timezone);
+    
+    // 3. Validar fecha
+    if (!date.isValid()) {
+      throw new HttpException('Formato de fecha inválido', HttpStatus.BAD_REQUEST);
+    }
+  
+    // 4. Obtener límites del día
+    const startOfDay = date.startOf('day').toDate(); // 2025-02-20 00:00:00 en TZ
+    const endOfDay = date.endOf('day').toDate(); // 2025-02-20 23:59:59 en TZ
+  
+    // 5. Buscar registros en el rango
+    return this.cashRegisterRepository.find({
+      where: {
+        user: { id: userId },
+        date: Between(startOfDay, endOfDay)
+      },
+      relations: ['user']
+    });
   }
 }

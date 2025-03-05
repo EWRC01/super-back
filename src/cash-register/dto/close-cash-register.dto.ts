@@ -1,5 +1,6 @@
-import { IsNumber, IsPositive } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsPositive, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { StateCashRegister } from 'src/common/enums/cash-register-state.enum';
 
 export class CloseCashRegisterDto {
   @ApiProperty({
@@ -11,4 +12,13 @@ export class CloseCashRegisterDto {
   @IsNumber()
   @IsPositive()
   cashInHand: number; // Efectivo actual en caja
+
+  @ApiProperty({
+    description: 'Estatus de la caja',
+    example: StateCashRegister.OPEN,
+    enum: StateCashRegister,
+  })
+  @IsString()
+  @IsNotEmpty()
+  state: StateCashRegister; // Estado de la caja (Abierto, Cerrado)
 }

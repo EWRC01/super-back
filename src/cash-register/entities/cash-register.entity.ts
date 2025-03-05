@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
 import { User } from 'src/users/entities/user.entity'; // Asegúrate de importar la entidad User
+import { StateCashRegister } from 'src/common/enums/cash-register-state.enum';
 
 @Entity()
 export class CashRegister {
@@ -23,6 +24,9 @@ export class CashRegister {
 
   @Column('decimal', { precision: 10, scale: 2 })
   discrepancy: number; // Diferencia entre cashInHand y expectedCash
+
+  @Column('enum', { enum: StateCashRegister,  nullable: true })
+  state: string; // Estado del corte de caja (Abierto, Cerrado)
 
   @ManyToOne(() => User, (user) => user.cashRegisters)
   user: User; // Usuario que realizó el corte de caja

@@ -55,4 +55,19 @@ export class CashRegisterController {
   async find(): Promise<CashRegister[]> {
     return this.cashRegisterService.find();
   }
+
+  @Get('details/:userId/:dateString')
+  @ApiOperation({ summary: 'Obtener el historial de caja en base a una fecha y id de usuario'})
+  @ApiParam({ name: 'userId', type: Number, description: 'ID del usuario' , example: 1 })
+  @ApiParam({ name: 'dateString', type: Date, description: 'Fecha Objetivo', example: '2025-03-05' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de cajas con detalle',
+    type: [CashRegister],
+  })
+  async findDetails(
+    @Param('userId') userId: number, 
+    @Param('dateString') dateString: string) : Promise<CashRegister[]> {
+    return this.cashRegisterService.findByUserandDate(userId, dateString);
+  }
 }
