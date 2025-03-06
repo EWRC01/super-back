@@ -8,6 +8,7 @@ import { Category } from '../categories/entities/category.entity';
 import { SoldProduct } from './entities/soldproduct.entity';
 import { CreateSoldProductsDto } from './dto/create-soldproduct.dto';
 import { PriceType } from 'src/common/enums/price-type.enum';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Injectable()
 export class SoldProductsService {
@@ -23,8 +24,20 @@ export class SoldProductsService {
   ) {}
 
   // 0. Obtener todos los productos vendidos
-  async find(): Promise<SoldProduct[]> {
-    return await this.soldProductRepository.find();
+  async find(paginationDto: PaginationDto) {
+    const {page, limit} = paginationDto;
+    const [data, total] = await this.soldProductRepository.findAndCount({
+      take: limit,
+      skip: (page - 1) * limit,
+    })
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit)
+    }
   }
 
   // 1. Obtener productos vendidos por ID y tipo

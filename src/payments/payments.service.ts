@@ -6,6 +6,7 @@ import { CreatePaymentDto } from './dto/create-payment.dto';
 import { AccountsHoldings } from 'src/accountsholdings/entities/accountsholding.entity';
 import { OperationType } from 'src/common/enums/operation-type.enum';
 import { Product } from 'src/products/entities/product.entity';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Injectable()
 export class PaymentsService {
@@ -82,8 +83,21 @@ export class PaymentsService {
         return payment;
     }
     
-    async findAll() {
-        return this.paymentRepository.find();
+    async findAll(paginationDto: PaginationDto) {
+        const {page, limit} = paginationDto;
+        const [data, total] = await this.paymentRepository.findAndCount({
+            take: limit,
+            skip: (page - 1) * limit,
+        });
+
+        return {
+            data,
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit)
+        }
+    
     }
 
     async findOne(id: number) {

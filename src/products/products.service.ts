@@ -6,6 +6,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Category } from 'src/categories/entities/category.entity';
 import { Brand } from 'src/brands/entities/brand.entity';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Injectable()
 export class ProductsService {
@@ -39,9 +40,22 @@ export class ProductsService {
   /**
    * Obtiene todos los productos con sus relaciones.
    */
-  async findAll() {
-    const products = await this.productRepository.find({ relations: ['brand', 'category'] });
-    return { products };
+  async findAll(paginationDto: PaginationDto) {
+    const {page, limit} = paginationDto;
+    const [data, total] = await this.productRepository.findAndCount({
+      take: limit,
+      skip: (page - 1) * limit,
+      relations: ['brand', 'category']
+    })
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit)
+
+    }
   }
 
   /**
@@ -82,8 +96,8 @@ export class ProductsService {
    * Obtiene el número total de productos registrados.
    */
   async getTotalProducts(): Promise<number> {
-    const result = await this.findAll();
-    return result.products.length;
+    const result = await this.productRepository.find();
+    return result.length;
   }
 
   /**

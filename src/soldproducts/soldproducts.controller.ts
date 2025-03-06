@@ -12,6 +12,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBody } from 
 import { SoldProductsService } from './soldproducts.service';
 import { CreateSoldProductsDto } from './dto/create-soldproduct.dto';
 import { UpdateSoldProductDto } from './dto/update-soldproduct.dto';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @ApiTags('Sold-Products')
 @Controller('sold-products')
@@ -40,8 +41,8 @@ export class SoldProductsController {
   @ApiOperation({ summary: 'Obtener todos los productos vendidos' })
   @ApiResponse({ status: 200, description: 'Lista de productos vendidos.' })  
   @ApiResponse({ status: 404, description: 'No se encontraron productos vendidos.' })
-  async find() {
-    return this.soldProductsService.find();
+  async find(@Query() paginationDto: PaginationDto) {
+    return this.soldProductsService.find(paginationDto);
   }
 
   @Get(':id/:type')

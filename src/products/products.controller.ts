@@ -8,6 +8,7 @@ import {
   ApiTags, ApiOperation, ApiParam, ApiQuery, 
   ApiResponse, ApiBadRequestResponse 
 } from '@nestjs/swagger';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @ApiTags('Products')
 @Controller('products')
@@ -22,8 +23,8 @@ export class ProductsController {
 
   @Get()
   @ApiOperation({ summary: 'Retrieve all products' })
-  async findAll() {
-    return this.productsService.findAll();
+  async findAll(@Query() paginationDto: PaginationDto) {
+    return this.productsService.findAll(paginationDto);
   }
 
   @Get(':id')

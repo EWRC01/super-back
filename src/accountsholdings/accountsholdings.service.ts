@@ -11,6 +11,7 @@ import { Customer } from 'src/customers/entities/customer.entity';
 import { User } from 'src/users/entities/user.entity';
 import { PriceType } from 'src/common/enums/price-type.enum';
 import { CreatePaymentDto } from 'src/payments/dto/create-payment.dto';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Injectable()
 export class AccountsHoldingsService {
@@ -130,10 +131,23 @@ export class AccountsHoldingsService {
   
     
   // Método para obtener todas las cuentas por cobrar o apartados
-  async findAll(): Promise<AccountsHoldings[]> {
-    return this.accountsHoldingsRepository.find({
-      relations: ['customer', 'user', 'soldProducts', 'payments'],
+  async findAll(paginationDto: PaginationDto) {
+    const {page, limit} = paginationDto;
+    const [data, total] = await this.accountsHoldingsRepository.findAndCount({
+      take: limit,
+      skip: (page - 1) * limit,
+      relations: ['customer', 'user', 'soldProducts', 'payments']
     });
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit)
+    }
+
+    
   }
 
   // Método para obtener una cuenta por cobrar o apartado por su ID

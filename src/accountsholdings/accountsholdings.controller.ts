@@ -1,10 +1,11 @@
-import { Controller, Post, Body, Param, Get, NotFoundException, BadRequestException, Put } from '@nestjs/common';
+import { Controller, Post, Body, Param, Get, NotFoundException, BadRequestException, Put, Query } from '@nestjs/common';
 import { AccountsHoldingsService } from './accountsholdings.service';
 import { CreateAccountsholdingDto } from './dto/create-accountsholding.dto';
 import { AccountsHoldings } from './entities/accountsholding.entity';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { Payment } from 'src/payments/entities/payment.entity';
 import { CreatePaymentDto } from 'src/payments/dto/create-payment.dto';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @ApiTags('Accounts-Holdings')
 @Controller('accountsholdings')
@@ -40,8 +41,8 @@ export class AccountsHoldingsController {
     description: 'Lista de todas las cuentas por cobrar o apartados',
     type: [AccountsHoldings],
   })
-  async findAll(): Promise<AccountsHoldings[]> {
-    return this.accountsHoldingsService.findAll();
+  async findAll(@Query() paginationDto: PaginationDto) {
+    return this.accountsHoldingsService.findAll(paginationDto);
   }
 
   // Obtener una cuenta por cobrar o apartado por su ID

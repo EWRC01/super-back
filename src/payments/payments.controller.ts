@@ -8,12 +8,14 @@ import {
     BadRequestException,
     HttpStatus,
     HttpCode,
+    Query,
 } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { Payment } from './entities/payment.entity';
 import { AccountsHoldings } from 'src/accountsholdings/entities/accountsholding.entity';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @ApiTags('Payments') // Etiqueta para agrupar los endpoints en Swagger
 @Controller('payments')
@@ -44,8 +46,8 @@ export class PaymentsController {
     @Get()
     @ApiOperation({ summary: 'Get all payments', description: 'Retrieves a list of all payments.' })
     @ApiResponse({ status: HttpStatus.OK, description: 'List of payments', type: [Payment] })
-    async findAll(): Promise<Payment[]> {
-        return this.paymentsService.findAll();
+    async findAll(@Query() paginationDto: PaginationDto) {
+        return this.paymentsService.findAll(paginationDto);
     }
 
     @Get(':id')
