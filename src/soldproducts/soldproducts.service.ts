@@ -27,8 +27,8 @@ export class SoldProductsService {
   async find(paginationDto: PaginationDto) {
     const {page, limit} = paginationDto;
     const [data, total] = await this.soldProductRepository.findAndCount({
-      take: limit,
-      skip: (page - 1) * limit,
+      take: Number(limit),
+      skip: Number((page - 1)) * Number(limit),
     })
 
     return {

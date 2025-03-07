@@ -134,8 +134,8 @@ export class AccountsHoldingsService {
   async findAll(paginationDto: PaginationDto) {
     const {page, limit} = paginationDto;
     const [data, total] = await this.accountsHoldingsRepository.findAndCount({
-      take: limit,
-      skip: (page - 1) * limit,
+      take: Number(limit),
+      skip: Number((page - 1)) * Number(limit),
       relations: ['customer', 'user', 'soldProducts', 'payments']
     });
 
