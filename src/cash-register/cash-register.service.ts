@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, Repository } from 'typeorm';
 import { CashRegister } from './entities/cash-register.entity';
@@ -60,16 +60,7 @@ export class CashRegisterService {
     const todayStart = moment().tz(timezone).startOf('day').toDate();
     const todayEnd = moment().tz(timezone).endOf('day').toDate();
   
-    // Calcular el total de ventas del día
-    const salesResult = await this.saleRepository
-      .createQueryBuilder('sale')
-      .select('SUM(sale.totalWithIVA)', 'totalSales')
-      .where('sale.date BETWEEN :todayStart AND :todayEnd', { todayStart, todayEnd })
-      .getRawOne();
-  
-    const totalSales = parseFloat(salesResult.totalSales) || 0;
-  
-    // Calcular el total de pagos del día (incluye reservas y fiados)
+    // Calcular el total de pagos recibidos en el día
     const paymentsResult = await this.paymentRepository
       .createQueryBuilder('payment')
       .select('SUM(payment.amount)', 'totalPayments')
@@ -78,23 +69,35 @@ export class CashRegisterService {
   
     const totalPayments = parseFloat(paymentsResult.totalPayments) || 0;
   
-    // Efectivo esperado en caja = total de ventas + total de pagos
-    const expectedCash = totalSales + totalPayments;
-    const discrepancy = cashInHand - expectedCash;
+    // Obtener el total de ventas en efectivo del día
+    const salesResult = await this.saleRepository
+      .createQueryBuilder('sale')
+      .select('SUM(sale.totalWithIVA)', 'totalSales')
+      .where('sale.date BETWEEN :todayStart AND :todayEnd', { todayStart, todayEnd })
+      .getRawOne();
   
-    // Crear el registro de corte de caja
-    const cashRegister = new CashRegister();
-    cashRegister.date = new Date();
-    cashRegister.cashInHand = cashInHand;
-    cashRegister.totalSales = totalSales;
-    cashRegister.totalPayments = totalPayments;
-    cashRegister.expectedCash = expectedCash;
-    cashRegister.discrepancy = discrepancy;
-    cashRegister.state = StateCashRegister.CLOSED;
-    cashRegister.user = { id: userId } as User;
+    const totalSales = parseFloat(salesResult.totalSales) || 0;
+  
+    // Calcular el efectivo esperado en caja
+    const expectedCash = totalSales + totalPayments;
+  
+    // Validar que el efectivo en caja coincida
+    if (cashInHand !== expectedCash) {
+      throw new BadRequestException(`Cash in hand (${cashInHand}) does not match expected cash (${expectedCash}).`);
+    }
+  
+    // Registrar el cierre de caja
+    const cashRegister = this.cashRegisterRepository.create({
+      user,
+      totalSales,
+      totalPayments,
+      cashInHand,
+      date: new Date(),
+    });
   
     return this.cashRegisterRepository.save(cashRegister);
   }
+  
 
   // Mostrar todos los registros de caja
   

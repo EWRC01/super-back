@@ -4,6 +4,7 @@ import { IsDate, IsEnum, IsInt, IsNotEmpty, ValidateNested, IsArray, IsString } 
 import { Type } from 'class-transformer';
 import { OperationType } from 'src/common/enums/operation-type.enum';
 import { PriceType } from 'src/common/enums/price-type.enum';
+import { AccountHoldingStatus } from 'src/common/enums/accounts-holdings-status.enum';
 
 class ProductDetailDto {
   @ApiProperty({
@@ -52,6 +53,15 @@ export class CreateAccountsholdingDto {
   @IsNotEmpty()
   @IsEnum(OperationType)
   type: OperationType;
+
+  @ApiProperty({
+    description: 'Estado de la cuenta',
+    example: AccountHoldingStatus.PENDING,
+    enum: AccountHoldingStatus
+  })
+  @IsNotEmpty()
+  @IsEnum(AccountHoldingStatus)
+  status: AccountHoldingStatus;
 
   @ApiProperty({
     description: 'ID del cliente asociado a la transacción',

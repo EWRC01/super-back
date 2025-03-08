@@ -14,5 +14,6 @@ import { Product } from 'src/products/entities/product.entity';
   imports: [TypeOrmModule.forFeature([AccountsHoldings, Customer, User, SoldProduct, Sale, Payment, Product])],
   controllers: [AccountsHoldingsController],
   providers: [AccountsHoldingsService],
+  exports: [AccountsHoldingsService]
 })
 export class AccountsholdingsModule {}

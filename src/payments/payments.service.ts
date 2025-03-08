@@ -7,6 +7,7 @@ import { AccountsHoldings } from 'src/accountsholdings/entities/accountsholding.
 import { OperationType } from 'src/common/enums/operation-type.enum';
 import { Product } from 'src/products/entities/product.entity';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { AccountsHoldingsService } from 'src/accountsholdings/accountsholdings.service';
 
 @Injectable()
 export class PaymentsService {
@@ -17,6 +18,7 @@ export class PaymentsService {
         private accountHoldingRepository: Repository<AccountsHoldings>,
         @InjectRepository(Product)
         private productRepository: Repository<Product>,
+        private readonly accountsHoldingsService: AccountsHoldingsService,
     ) {}
 
     async create(createDto: CreatePaymentDto): Promise<Payment> {
@@ -76,9 +78,12 @@ export class PaymentsService {
                 await this.productRepository.save(product);
             }
         }
-    
-        // Guardar la cuenta actualizada
-        await this.accountHoldingRepository.save(accountHolding);
+
+        if (accountHolding.toPay <= 0) {
+            await this.accountsHoldingsService.finalizeAccountHolding(accountHoldingId);
+        } else {
+            await this.accountHoldingRepository.save(accountHolding);
+        }
     
         return payment;
     }

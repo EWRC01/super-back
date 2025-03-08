@@ -10,8 +10,10 @@ import { OperationType } from 'src/common/enums/operation-type.enum';
 import { Customer } from 'src/customers/entities/customer.entity';
 import { User } from 'src/users/entities/user.entity';
 import { PriceType } from 'src/common/enums/price-type.enum';
-import { CreatePaymentDto } from 'src/payments/dto/create-payment.dto';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import * as moment from 'moment-timezone';
+import { Sale } from 'src/sales/entities/sale.entity';
+import { AccountHoldingStatus } from 'src/common/enums/accounts-holdings-status.enum';
 
 @Injectable()
 export class AccountsHoldingsService {
@@ -33,13 +35,19 @@ export class AccountsHoldingsService {
 
     @InjectRepository(User)
     private userRepository: Repository<User>,
+
+    @InjectRepository(Sale)
+    private saleRepository: Repository<Sale>,
   ) {}
 
   async create(createDto: CreateAccountsholdingDto): Promise<AccountsHoldings> {
-    const { customerId, userId, products, type } = createDto;
+    const { customerId, userId, products, type, status } = createDto;
     
     // Determinar si la cuenta es holding basándose en el DTO
     const isHolding = type === OperationType.HOLDING;
+
+    // Determinar el estatus basandonos en el DTO
+    const isPartial = status === AccountHoldingStatus.PARTIAL
     
     // Validar existencia del cliente y usuario
     const customer = await this.customerRepository.findOne({ where: { id: customerId } });
@@ -63,6 +71,7 @@ export class AccountsHoldingsService {
       paid: 0,   // Inicialmente 0
       toPay: 0,  // Se actualizará más adelante
       type: isHolding ? OperationType.HOLDING : OperationType.ACCOUNT,
+      status: isPartial ? AccountHoldingStatus.PARTIAL: AccountHoldingStatus.PENDING,
     });
     
     // Guardar la cuenta
@@ -128,6 +137,47 @@ export class AccountsHoldingsService {
     // Guardar la cuenta actualizada
     return this.accountsHoldingsRepository.save(accountHolding);
   }
+
+  async finalizeAccountHolding(accountHoldingId: number): Promise<Sale> {
+    const accountHolding = await this.accountsHoldingsRepository.findOne({
+      where: { id: accountHoldingId },
+      relations: ['customer', 'user', 'soldProducts'],
+    });
+  
+    if (!accountHolding) {
+      throw new NotFoundException(`AccountHolding with ID ${accountHoldingId} not found`);
+    }
+  
+    // Verificar si la cuenta ya está completamente pagada
+    if (accountHolding.toPay > 0) {
+      throw new BadRequestException('The account is not fully paid yet.');
+    }
+  
+    // Convertir la cuenta en una venta
+    const sale = this.saleRepository.create({
+      customer: accountHolding.customer,
+      user: accountHolding.user,
+      totalWithIVA: accountHolding.total,
+      totalWithoutIVA: accountHolding.total / 1.13,
+      totalIVA: accountHolding.total - (accountHolding.total / 1.13),
+      date: moment().tz('America/El_Salvador').toDate(), // La fecha en que la cuenta se finaliza
+    });
+  
+    const savedSale = await this.saleRepository.save(sale);
+  
+    // Asociar los productos vendidos
+    for (const soldProduct of accountHolding.soldProducts) {
+      soldProduct.saleId = savedSale.id;
+      await this.soldProductRepository.save(soldProduct);
+    }
+  
+    // Marcar la cuenta como finalizada
+    accountHolding.status = AccountHoldingStatus.PAID;
+    await this.accountsHoldingsRepository.save(accountHolding);
+  
+    return savedSale;
+  }
+  
   
     
   // Método para obtener todas las cuentas por cobrar o apartados

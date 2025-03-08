@@ -6,6 +6,7 @@ import { OperationType } from 'src/common/enums/operation-type.enum';
 import { Product } from 'src/products/entities/product.entity';
 import { Payment } from 'src/payments/entities/payment.entity';
 import { SoldProduct } from 'src/soldproducts/entities/soldproduct.entity';
+import { AccountHoldingStatus } from 'src/common/enums/accounts-holdings-status.enum';
 
 @Entity('accounts_holdings')
 export class AccountsHoldings {
@@ -26,6 +27,9 @@ export class AccountsHoldings {
 
   @Column({ type: 'enum', enum: OperationType , nullable: false })
   type: string;
+
+  @Column({type: 'enum', enum: AccountHoldingStatus, nullable: false})
+  status: string;
 
   @ManyToOne(() => Customer, (customer) => customer.accountsHoldings)
   @JoinColumn({ name: 'customerId' })
