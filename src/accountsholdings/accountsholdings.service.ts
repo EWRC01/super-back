@@ -160,6 +160,7 @@ export class AccountsHoldingsService {
       totalWithIVA: accountHolding.total,
       totalWithoutIVA: accountHolding.total / 1.13,
       totalIVA: accountHolding.total - (accountHolding.total / 1.13),
+      paid: accountHolding.paid,
       date: moment().tz('America/El_Salvador').toDate(), // La fecha en que la cuenta se finaliza
     });
   

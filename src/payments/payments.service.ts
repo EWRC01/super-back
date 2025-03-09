@@ -8,6 +8,7 @@ import { OperationType } from 'src/common/enums/operation-type.enum';
 import { Product } from 'src/products/entities/product.entity';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { AccountsHoldingsService } from 'src/accountsholdings/accountsholdings.service';
+import * as moment from 'moment-timezone';
 
 @Injectable()
 export class PaymentsService {
@@ -27,7 +28,7 @@ export class PaymentsService {
         // Buscar la cuenta asociada, incluyendo sus relaciones
         const accountHolding = await this.accountHoldingRepository.findOne({
             where: { id: accountHoldingId },
-            relations: ['payments', 'soldProducts', 'soldProducts.product', 'customer'],
+            relations: ['payments', 'customer'],
         });
     
         if (!accountHolding) {
@@ -39,21 +40,24 @@ export class PaymentsService {
             throw new BadRequestException('This account holding does not belong to the provided customer');
         }
     
-        // Logs para depuración
-        console.log('Monto del pago:', amount);
-        console.log('Saldo pendiente:', accountHolding.toPay);
-        console.log('accountHoldingId:', accountHoldingId);
-        console.log('customerId:', customerId);
-    
-        // Validar que el saldo pendiente sea mayor o igual al monto del pago
-        if (amount > Number(accountHolding.toPay)) {
-            throw new BadRequestException('The amount exceeds the pending balance');
+        // Verificamos que la cuenta se haya pagado
+
+        if (accountHolding.toPay <= 0) {
+            throw new BadRequestException('This account has already been fully paid!')
+        }
+
+        let change = 0;
+        let paidAmount = amount;
+
+        if (amount > accountHolding.toPay) {
+            change = amount - accountHolding.toPay;
+            paidAmount = accountHolding.toPay // Solo se paga la cantidad necesaria
         }
     
         // Crear el pago
         const payment = this.paymentRepository.create({
-            amount,
-            date: new Date(date),
+            amount: paidAmount,
+            date: moment().tz('America/El_Salvador').toDate(),
             accountHolding,
         });
     
@@ -67,7 +71,7 @@ export class PaymentsService {
     
         // Actualizar el estado de la cuenta
         accountHolding.paid = Number(accountHolding.paid) + Number(amount);
-        accountHolding.toPay = Number(accountHolding.toPay) - Number(amount);
+        accountHolding.toPay = Math.max(Number(accountHolding.toPay) - Number(amount), 0);
     
         // Si el pago es total y la operación es HOLDING, mover los productos reservados a vendidos
         if (accountHolding.paid === accountHolding.total && accountHolding.type === OperationType.HOLDING) {
@@ -78,14 +82,29 @@ export class PaymentsService {
                 await this.productRepository.save(product);
             }
         }
+        
+        // Guardar cuenta actualizada antes de verificar si se finaliza
+
+        await this.accountHoldingRepository.save(accountHolding);
+
+        // Si ya no hay saldo pendiente, finaliza la cuenta
 
         if (accountHolding.toPay <= 0) {
             await this.accountsHoldingsService.finalizeAccountHolding(accountHoldingId);
-        } else {
-            await this.accountHoldingRepository.save(accountHolding);
         }
+
+        const savedPayment = await this.paymentRepository.findOne({
+            where: { id: payment.id},
+            relations: ['accounts_holdings']
+        });
     
-        return payment;
+        return {
+            id: savedPayment.id,
+            date: savedPayment.date,
+            amount: savedPayment.amount,
+            accountHoldingId: savedPayment.accountHolding.id,
+            accountHolding: savedPayment.accountHolding,
+        };
     }
     
     async findAll(paginationDto: PaginationDto) {
