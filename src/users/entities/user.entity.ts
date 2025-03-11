@@ -2,7 +2,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { Sale } from '../../sales/entities/sale.entity';
 import { Quotation } from '../../quotations/entities/quotation.entity';
-import { AccountsHoldings } from 'src/accountsholdings/entities/accountsholding.entity';
 import { CashRegister } from 'src/cash-register/entities/cash-register.entity';
 
 @Entity('users')
@@ -24,9 +23,6 @@ export class User {
 
   @OneToMany(() => Sale, (sale) => sale.user, {onDelete: 'CASCADE'})
   sales: Sale[];
-
-  @OneToMany(() => AccountsHoldings, (accountsHoldings) => accountsHoldings.user, {onDelete: 'CASCADE'})
-  accountsHoldings: AccountsHoldings[];
 
   @OneToMany(() => Quotation, (quotation) => quotation.user, {onDelete: 'CASCADE'})
   quotations: Quotation[];

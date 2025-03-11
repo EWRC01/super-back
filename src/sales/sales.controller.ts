@@ -68,11 +68,4 @@ export class SalesController {
   getMonthlyIncome() {
     return this.salesService.getMonthlyIncome();
   }
-
-  @Get('pending-income')
-  @ApiOperation({ summary: 'Get pending income from sales' })
-  @ApiResponse({ status: 200, description: 'Pending income.' })
-  getPendingIncome() {
-    return this.salesService.getPendingIncome();
-  }
 }

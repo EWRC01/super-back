@@ -5,17 +5,13 @@ import { ProductsModule } from './products/products.module';
 import { CustomersModule } from './customers/customers.module';
 import { UsersModule } from './users/users.module';
 import { SalesModule } from './sales/sales.module';
-import { AccountsholdingsModule } from './accountsholdings/accountsholdings.module';
 import { SoldproductsModule } from './soldproducts/soldproducts.module';
 import { QuotationsModule } from './quotations/quotations.module';
 import { ConfigurationModule } from './configuration/configuration.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PaymentsModule } from './payments/payments.module';
 import { QuotationProductsModule } from './quotation-products/quotation-products.module';
 import { CashRegisterModule } from './cash-register/cash-register.module';
-import { TaxController } from './tax/tax.controller';
-import { TaxService } from './tax/tax.service';
 import { TaxModule } from './tax/tax.module';
 import { EmployeesModule } from './employees/employees.module';
 import { EmployeePaymentsModule } from './employee-payments/employee-payments.module';
@@ -43,11 +39,9 @@ import { EmployeePaymentsModule } from './employee-payments/employee-payments.mo
     CustomersModule, 
     UsersModule, 
     SalesModule, 
-    AccountsholdingsModule, 
     SoldproductsModule, 
     QuotationsModule, 
     ConfigurationModule, 
-    PaymentsModule, 
     QuotationProductsModule, 
     CashRegisterModule, 
     TaxModule, EmployeesModule, EmployeePaymentsModule

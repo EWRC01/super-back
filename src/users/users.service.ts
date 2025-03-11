@@ -8,7 +8,6 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { Sale } from '../sales/entities/sale.entity';
-import { AccountsHoldings } from 'src/accountsholdings/entities/accountsholding.entity';
 import * as moment from 'moment-timezone';
 
 @Injectable()
@@ -18,8 +17,6 @@ export class UsersService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(Sale)
     private readonly saleRepository: Repository<Sale>,
-    @InjectRepository(AccountsHoldings)
-    private readonly accountsHoldingsRepository: Repository<AccountsHoldings>,
   ) {}
 
   async registerUser(createUserDto: CreateUserDto) {
@@ -146,13 +143,7 @@ export class UsersService {
       .where('sale.userId = :userId', { userId })
       .getRawOne();
 
-    const accountsIncome = await this.accountsHoldingsRepository
-      .createQueryBuilder('account')
-      .select('SUM(account.paid)', 'totalIncome')
-      .where('account.userId = :userId', { userId })
-      .getRawOne();
-
-    const totalIncome = (parseFloat(salesIncome.totalIncome) || 0) + (parseFloat(accountsIncome.totalIncome) || 0);
+    const totalIncome = (parseFloat(salesIncome.totalIncome) || 0);
     return { totalIncome };
   }
 
@@ -177,16 +168,8 @@ export class UsersService {
       .andWhere('sale.userId = :userId', { userId })
       .getRawOne();
   
-    // Consultar los pagos de cuentas del día para el usuario específico
-    const accountsIncome = await this.accountsHoldingsRepository
-      .createQueryBuilder('account')
-      .select('SUM(account.paid)', 'totalIncome')
-      .where('account.date >= :todayStart AND account.date <= :todayEnd', { todayStart, todayEnd })
-      .andWhere('account.userId = :userId', { userId })
-      .getRawOne();
-  
     // Calcular el ingreso total
-    const totalIncome = (parseFloat(salesIncome.totalIncome) || 0) + (parseFloat(accountsIncome.totalIncome) || 0);
+    const totalIncome = (parseFloat(salesIncome.totalIncome) || 0);
     return { totalIncome };
   }
 
@@ -211,16 +194,8 @@ export class UsersService {
       .andWhere('sale.userId = :userId', { userId })
       .getRawOne();
   
-    // Consultar los pagos de cuentas de la semana para el usuario específico
-    const accountsIncome = await this.accountsHoldingsRepository
-      .createQueryBuilder('account')
-      .select('SUM(account.paid)', 'totalIncome')
-      .where('account.date >= :weekStart AND account.date <= :weekEnd', { weekStart, weekEnd })
-      .andWhere('account.userId = :userId', { userId })
-      .getRawOne();
-  
     // Calcular el ingreso total
-    const totalIncome = (parseFloat(salesIncome.totalIncome) || 0) + (parseFloat(accountsIncome.totalIncome) || 0);
+    const totalIncome = (parseFloat(salesIncome.totalIncome) || 0);
     return { totalIncome };
   }
 
@@ -245,16 +220,8 @@ export class UsersService {
       .andWhere('sale.userId = :userId', { userId })
       .getRawOne();
   
-    // Consultar los pagos de cuentas del mes para el usuario específico
-    const accountsIncome = await this.accountsHoldingsRepository
-      .createQueryBuilder('account')
-      .select('SUM(account.paid)', 'totalIncome')
-      .where('account.date >= :monthStart AND account.date <= :monthEnd', { monthStart, monthEnd })
-      .andWhere('account.userId = :userId', { userId })
-      .getRawOne();
-  
     // Calcular el ingreso total
-    const totalIncome = (parseFloat(salesIncome.totalIncome) || 0) + (parseFloat(accountsIncome.totalIncome) || 0);
+    const totalIncome = (parseFloat(salesIncome.totalIncome) || 0);
     return { totalIncome };
   }
 

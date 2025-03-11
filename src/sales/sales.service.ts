@@ -9,7 +9,6 @@ import { User } from 'src/users/entities/user.entity';
 import { Customer } from 'src/customers/entities/customer.entity';
 import { PriceType } from '../common/enums/price-type.enum';
 import * as moment from 'moment-timezone';
-import { AccountsHoldings } from 'src/accountsholdings/entities/accountsholding.entity';
 
 @Injectable()
 export class SalesService {
@@ -24,8 +23,6 @@ export class SalesService {
     private userRepository: Repository<User>,
     @InjectRepository(Customer)
     private customerRepository: Repository<Customer>,
-    @InjectRepository(AccountsHoldings)
-    private accountsHoldingsRepository: Repository<AccountsHoldings>,
   ) {}
 
   async create(createSaleDto: CreateSaleDto): Promise<any> {
@@ -246,15 +243,5 @@ export class SalesService {
       .andWhere('sale.date <= :monthEnd', { monthEnd })
       .getRawOne();
     return result.totalIncome || 0; // Retornar 0 si no hay ventas
-  }
-
-  async getPendingIncome(): Promise<number> {
-    const result = await this.accountsHoldingsRepository
-      .createQueryBuilder('account')
-      .select('SUM(account.toPay)', 'pendingIncome')
-      .where('account.type = :type', { type: 'account' }) // Filtra solo las cuentas por cobrar
-      .getRawOne();
-  
-    return result.pendingIncome || 0;
   }
 }

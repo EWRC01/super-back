@@ -2,7 +2,6 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 't
 import { Sale } from '../../sales/entities/sale.entity';
 import { Product } from '../../products/entities/product.entity';
 import { OperationType } from 'src/common/enums/operation-type.enum';
-import { AccountsHoldings } from 'src/accountsholdings/entities/accountsholding.entity';
 
 @Entity('sold_products')
 export class SoldProduct {
@@ -36,10 +35,6 @@ export class SoldProduct {
   @ManyToOne(() => Sale, (sale) => sale.products, {onDelete: 'CASCADE'})
   @JoinColumn({ name: 'saleId' })
   sale?: Sale;
-
-  @ManyToOne(() => AccountsHoldings, (accountHolding) => accountHolding.soldProducts, {onDelete: 'CASCADE'})
-  @JoinColumn({ name: 'accountHoldingId' })
-  accountHolding?: AccountsHoldings;
 
   @ManyToOne(() => Product, (product) => product.soldProducts, {onDelete: 'CASCADE'})
   @JoinColumn({ name: 'productId' })

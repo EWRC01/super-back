@@ -5,7 +5,6 @@ import { CashRegister } from './entities/cash-register.entity';
 import { Sale } from 'src/sales/entities/sale.entity'; // Asegúrate de importar la entidad Sale
 import { User } from 'src/users/entities/user.entity'; // Asegúrate de importar la entidad User
 import * as moment from 'moment-timezone';
-import { Payment } from 'src/payments/entities/payment.entity';
 import { OpenCashRegisterDto } from './dto/open-cash-register.dto';
 import { StateCashRegister } from 'src/common/enums/cash-register-state.enum';
 
@@ -18,8 +17,6 @@ export class CashRegisterService {
     private saleRepository: Repository<Sale>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
-    @InjectRepository(Payment)
-    private paymentRepository: Repository<Payment>,
   ) {}
 
 
@@ -69,17 +66,9 @@ export class CashRegisterService {
   
     const totalSales = parseFloat(salesResult.totalSales) || 0;
   
-    // Calcular el total de pagos del día (incluye reservas y fiados)
-    const paymentsResult = await this.paymentRepository
-      .createQueryBuilder('payment')
-      .select('SUM(payment.amount)', 'totalPayments')
-      .where('payment.date BETWEEN :todayStart AND :todayEnd', { todayStart, todayEnd })
-      .getRawOne();
-  
-    const totalPayments = parseFloat(paymentsResult.totalPayments) || 0;
   
     // Efectivo esperado en caja = total de ventas + total de pagos
-    const expectedCash = totalSales + totalPayments;
+    const expectedCash = totalSales 
     const discrepancy = cashInHand - expectedCash;
   
     // Crear el registro de corte de caja
@@ -87,7 +76,6 @@ export class CashRegisterService {
     cashRegister.date = new Date();
     cashRegister.cashInHand = cashInHand;
     cashRegister.totalSales = totalSales;
-    cashRegister.totalPayments = totalPayments;
     cashRegister.expectedCash = expectedCash;
     cashRegister.discrepancy = discrepancy;
     cashRegister.state = StateCashRegister.CLOSED;
