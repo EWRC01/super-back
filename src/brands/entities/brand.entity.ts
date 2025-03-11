@@ -1,6 +1,7 @@
 // src/brands/entities/brand.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
 import { Product } from '../../products/entities/product.entity';
+import { Provider } from 'src/providers/entities/provider.entity';
 
 @Entity('brands')
 export class Brand {
@@ -9,6 +10,10 @@ export class Brand {
 
   @Column({ type: 'varchar', length: 50, nullable: false })
   brandName: string;
+
+  @ManyToOne(() => Provider, (provider) => provider.brands, {nullable: false})
+  @JoinColumn({name: 'providerId'})
+  provider: Provider;
 
   @OneToMany(() => Product, (product) => product.brand)
   products: Product[];
