@@ -1,26 +1,71 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Order } from './entities/order.entity';
+import { Provider } from 'src/providers/entities/provider.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 
 @Injectable()
 export class OrdersService {
-  create(createOrderDto: CreateOrderDto) {
-    return 'This action adds a new order';
+  constructor(
+    @InjectRepository(Order)
+    private readonly orderRepository: Repository<Order>,
+
+    @InjectRepository(Provider)
+    private readonly providerRepository: Repository<Provider>,
+  ) {}
+
+  async create(createOrderDto: CreateOrderDto): Promise<Order> {
+    const provider = await this.providerRepository.findOne({
+      where: { id: createOrderDto.providerId },
+    });
+
+    if (!provider) {
+      throw new NotFoundException(`Proveedor con ID ${createOrderDto.providerId} no encontrado`);
+    }
+
+    const newOrder = this.orderRepository.create({
+      provider,
+      orderDate: createOrderDto.orderDate,
+      invoiceNumber: createOrderDto.invoiceNumber,
+    });
+
+    return await this.orderRepository.save(newOrder);
   }
 
-  findAll() {
-    return `This action returns all orders`;
+  async findAll(): Promise<Order[]> {
+    return await this.orderRepository.find({ relations: ['provider', 'orderDetails'] });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} order`;
+  async findOne(id: number): Promise<Order> {
+    const order = await this.orderRepository.findOne({
+      where: { id },
+      relations: ['provider', 'orderDetails'],
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Pedido con ID ${id} no encontrado`);
+    }
+
+    return order;
   }
 
-  update(id: number, updateOrderDto: UpdateOrderDto) {
-    return `This action updates a #${id} order`;
+  async update(id: number, updateOrderDto: UpdateOrderDto): Promise<Order> {
+    const order = await this.findOne(id);
+
+    if (updateOrderDto.orderDate) {
+      order.orderDate = updateOrderDto.orderDate;
+    }
+    if (updateOrderDto.invoiceNumber) {
+      order.invoiceNumber = updateOrderDto.invoiceNumber;
+    }
+
+    return await this.orderRepository.save(order);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} order`;
+  async remove(id: number): Promise<void> {
+    const order = await this.findOne(id);
+    await this.orderRepository.remove(order);
   }
 }
