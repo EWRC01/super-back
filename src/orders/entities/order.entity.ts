@@ -14,7 +14,7 @@ export class Order {
     @Column({type: 'date', nullable: false})
     orderDate: Date;
 
-    @Column({ type: 'varchar', length: 50, nullable: false})
+    @Column({ type: 'varchar', length: 50, nullable: false, unique: true})
     invoiceNumber: string
 
     @OneToMany(() => OrderDetail, (orderDetail) => orderDetail.order)

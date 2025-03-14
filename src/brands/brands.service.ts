@@ -35,11 +35,11 @@ export class BrandsService {
   }
 
   async findAll(): Promise<Brand[]> {
-    return await this.brandRepository.find({ relations: ['products, providers'] });
+    return await this.brandRepository.find({ relations: ['products', 'provider'] });
   }
 
   async findOne(id: number): Promise<Brand> {
-    const brand = await this.brandRepository.findOne({ where: { id }, relations: ['products, providers'] });
+    const brand = await this.brandRepository.findOne({ where: { id }, relations: ['products', 'provider'] });
     if (!brand) {
       throw new NotFoundException(`La marca con el ID ${id} no existe`);
     }
@@ -47,8 +47,24 @@ export class BrandsService {
   }
 
   async update(id: number, updateBrandDto: UpdateBrandDto): Promise<Brand> {
-    await this.findOne(id); // Verifica si la marca existe antes de actualizarla
-    await this.brandRepository.update(id, updateBrandDto);
+    const brand = await this.findOne(id);
+    
+    if (updateBrandDto.providerId) {
+      const provider = await this.providerRepository.findOne({
+        where: { id: updateBrandDto.providerId }
+      });
+      
+      if (!provider) {
+        throw new NotFoundException('Proveedor no encontrado');
+      }
+      brand.provider = provider;
+    }
+  
+    if (updateBrandDto.brandName) {
+      brand.brandName = updateBrandDto.brandName;
+    }
+  
+    await this.brandRepository.save(brand);
     return this.findOne(id);
   }
 

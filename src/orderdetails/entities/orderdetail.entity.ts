@@ -1,4 +1,3 @@
-// src/orderdetails/entities/orderdetail.entity.ts
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { Order } from '../../orders/entities/order.entity';
 import { Product } from '../../products/entities/product.entity';
@@ -9,7 +8,7 @@ export class OrderDetail {
   id: number;
 
   @ManyToOne(() => Order, (order) => order.orderDetails, { nullable: false })
-  @JoinColumn({ name: 'orderId' })
+  @JoinColumn({ name: 'invoiceNumber', referencedColumnName: 'invoiceNumber' })
   order: Order;
 
   @ManyToOne(() => Product, { nullable: false })

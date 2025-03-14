@@ -1,34 +1,60 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { OrderdetailsService } from './orderdetails.service';
-import { CreateOrderdetailDto } from './dto/create-orderdetail.dto';
-import { UpdateOrderdetailDto } from './dto/update-orderdetail.dto';
+import { 
+  Controller, 
+  Post, 
+  Body, 
+  HttpCode, 
+  HttpStatus, 
+  UsePipes, 
+  ValidationPipe, 
+  NotFoundException, 
+  BadRequestException 
+} from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { OrderDetailsService } from './orderdetails.service';
+import { CreateOrderDetailDto } from './dto/create-orderdetail.dto';
+import { OrderDetail } from './entities/orderdetail.entity';
 
-@Controller('orderdetails')
-export class OrderdetailsController {
-  constructor(private readonly orderdetailsService: OrderdetailsService) {}
+@ApiTags('Order Details') // Grupo en Swagger
+@Controller('order-details')
+export class OrderDetailsController {
+  constructor(private readonly orderDetailsService: OrderDetailsService) {}
 
   @Post()
-  create(@Body() createOrderdetailDto: CreateOrderdetailDto) {
-    return this.orderdetailsService.create(createOrderdetailDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.orderdetailsService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.orderdetailsService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateOrderdetailDto: UpdateOrderdetailDto) {
-    return this.orderdetailsService.update(+id, updateOrderdetailDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.orderdetailsService.remove(+id);
+  @HttpCode(HttpStatus.CREATED)
+  @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
+  @ApiOperation({
+    summary: 'Registrar un detalle de orden',
+    description: `Permite registrar un nuevo detalle de orden. Si el producto ya existe en el sistema, se utilizará su información. 
+    Si el producto no existe, se creará automáticamente con los datos proporcionados en el request.`,
+  })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Detalle de orden registrado correctamente',
+    type: OrderDetail,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Los datos proporcionados son incorrectos o faltan campos obligatorios',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'No se encontró la orden con el número de factura o la marca/categoría del producto',
+  })
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'Error interno del servidor',
+  })
+  async create(@Body() createOrderDetailDto: CreateOrderDetailDto): Promise<OrderDetail> {
+    try {
+      return await this.orderDetailsService.create(createOrderDetailDto);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message);
+      }
+      if (error instanceof BadRequestException) {
+        throw new BadRequestException(error.message);
+      }
+      throw new Error('Error interno del servidor');
+    }
   }
 }
