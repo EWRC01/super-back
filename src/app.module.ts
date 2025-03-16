@@ -18,6 +18,7 @@ import { EmployeePaymentsModule } from './employee-payments/employee-payments.mo
 import { ProvidersModule } from './providers/providers.module';
 import { OrdersModule } from './orders/orders.module';
 import { OrderdetailsModule } from './orderdetails/orderdetails.module';
+import { PrinterModule } from './printer/printer.module';
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -47,7 +48,13 @@ import { OrderdetailsModule } from './orderdetails/orderdetails.module';
     ConfigurationModule, 
     QuotationProductsModule, 
     CashRegisterModule, 
-    TaxModule, EmployeesModule, EmployeePaymentsModule, ProvidersModule, OrdersModule, OrderdetailsModule
+    TaxModule, 
+    EmployeesModule, 
+    EmployeePaymentsModule, 
+    ProvidersModule, 
+    OrdersModule,
+    OrderdetailsModule, 
+    PrinterModule,
   ],
   controllers: [],
   providers: [],
