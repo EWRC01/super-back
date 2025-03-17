@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Provider } from './entities/provider.entity';
@@ -34,13 +34,20 @@ export class ProvidersService {
   }
 
   async update(id: number, updateProviderDto: UpdateProviderDto): Promise<Provider> {
-    const provider = await this.findOne(id);
+    const provider = await this.providerRepository.findOne({where: {id: id}});
+
+    if (!provider) { throw new HttpException(`Provider with ID: ${id} not found!`, HttpStatus.NOT_FOUND )};
+
     Object.assign(provider, updateProviderDto);
+
     return await this.providerRepository.save(provider);
   }
 
   async remove(id: number): Promise<void> {
-    const provider = await this.findOne(id);
+    const provider = await this.providerRepository.findOne({where: {id: id}});
+
+    if (!provider) { throw new HttpException(`Provider with ID: ${id} not found!`, HttpStatus.NOT_FOUND )};
+    
     await this.providerRepository.remove(provider);
   }
 }

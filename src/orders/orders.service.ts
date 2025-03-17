@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Order } from './entities/order.entity';
@@ -52,20 +52,20 @@ export class OrdersService {
   }
 
   async update(id: number, updateOrderDto: UpdateOrderDto): Promise<Order> {
-    const order = await this.findOne(id);
+    const order = await this.orderRepository.findOne({where: {id}});
 
-    if (updateOrderDto.orderDate) {
-      order.orderDate = updateOrderDto.orderDate;
-    }
-    if (updateOrderDto.invoiceNumber) {
-      order.invoiceNumber = updateOrderDto.invoiceNumber;
-    }
+    if (!order) { throw new HttpException(`Order With ID: ${id} not found!`, HttpStatus.NOT_FOUND)};
+
+    Object.assign(order, updateOrderDto);
 
     return await this.orderRepository.save(order);
   }
 
   async remove(id: number): Promise<void> {
-    const order = await this.findOne(id);
+    const order = await this.orderRepository.findOne({where: {id}});
+
+    if (!order) { throw new HttpException(`Order With ID: ${id} not found!`, HttpStatus.NOT_FOUND)};
+    
     await this.orderRepository.remove(order);
   }
 }
