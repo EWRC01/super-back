@@ -7,7 +7,8 @@ import {
   UsePipes, 
   ValidationPipe, 
   NotFoundException, 
-  BadRequestException 
+  BadRequestException, 
+  Get
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { OrderDetailsService } from './orderdetails.service';
@@ -18,6 +19,21 @@ import { OrderDetail } from './entities/orderdetail.entity';
 @Controller('order-details')
 export class OrderDetailsController {
   constructor(private readonly orderDetailsService: OrderDetailsService) {}
+
+  @Get()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Encuentra todos los registros',
+    description: 'Permite encontrar todos los registros de detalles de orden'
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Registros encontrados correctamente',
+    type: OrderDetail
+  })
+  async findAll() {
+    return await this.orderDetailsService.findAll();
+  }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -44,7 +60,7 @@ export class OrderDetailsController {
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     description: 'Error interno del servidor',
   })
-  async create(@Body() createOrderDetailDto: CreateOrderDetailDto): Promise<OrderDetail> {
+  async create(@Body() createOrderDetailDto: CreateOrderDetailDto): Promise<OrderDetail[]> {
     try {
       return await this.orderDetailsService.create(createOrderDetailDto);
     } catch (error) {

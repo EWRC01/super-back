@@ -19,8 +19,14 @@ export class OrderDetail {
   quantity: number;
 
   @Column({ type: 'decimal', precision: 8, scale: 2, nullable: false })
-  purchasePrice: number; // Precio de compra
+  purchasePriceUnit: number; // Precio de compra
 
   @Column({ type: 'decimal', precision: 8, scale: 2, nullable: false })
-  calculatedTax: number; // IVA calculado
+  calculatedTaxUnit: number; // IVA por unidad calculado
+
+  @Column({ type: 'decimal', precision: 8, scale: 2, nullable: false })
+  calculatedTotalPriceWithouthTax: number; // Precio sin IVA
+
+  @Column({type: 'decimal', precision: 8, scale: 2, nullable: false })
+  calculatedTotalTax: number; // IVA total calculado
 }
