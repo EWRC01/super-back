@@ -17,6 +17,9 @@ export class Order {
     @Column({ type: 'varchar', length: 50, nullable: false, unique: true})
     invoiceNumber: string
 
-    @OneToMany(() => OrderDetail, (orderDetail) => orderDetail.order)
+    @OneToMany(() => OrderDetail, (orderDetail) => orderDetail.order, {
+        cascade: true,
+        onDelete: 'CASCADE'
+    })
     orderDetails: OrderDetail[]
 }

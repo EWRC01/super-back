@@ -7,7 +7,7 @@ export class OrderDetail {
   @PrimaryGeneratedColumn({ unsigned: true })
   id: number;
 
-  @ManyToOne(() => Order, (order) => order.orderDetails, { nullable: false })
+  @ManyToOne(() => Order, (order) => order.orderDetails, { onDelete: 'CASCADE', nullable: false })
   @JoinColumn({ name: 'invoiceNumber', referencedColumnName: 'invoiceNumber' })
   order: Order;
 
