@@ -82,22 +82,21 @@ export class OrderDetailsService {
       }
 
       const purchasePriceDecimal = new Decimal(purchasePrice);
-      const taxPerUnit  = purchasePriceDecimal.minus(purchasePriceDecimal.dividedBy(1.13));
-      const taxAmount = taxPerUnit.times(productData.quantity);
-
-      // Cálculos de impuestos (IVA 13%)
-      const taxPerUnitRounded = taxPerUnit.toDecimalPlaces(2).toNumber();
-      const taxAmountRounded = taxAmount.toDecimalPlaces(2).toNumber();
-      const totalWithouthTax = purchasePriceDecimal.dividedBy(1.13).times(productData.quantity).toDecimalPlaces(2).toNumber();
+      const basePriceWithouthTax = purchasePriceDecimal.dividedBy(1.13).toDecimalPlaces(2);
+      const taxPerUnit = purchasePriceDecimal.minus(basePriceWithouthTax).toDecimalPlaces(2);
+      const totalWithouthTax = basePriceWithouthTax.times(productData.quantity).toDecimalPlaces(2);
+      const totalTax = taxPerUnit.times(productData.quantity).toDecimalPlaces(2);
+      const totalWithTax = purchasePriceDecimal.times(productData.quantity).toDecimalPlaces(2);
 
       const orderDetail = this.orderDetailRepo.create({
         order,
         product,
         quantity: productData.quantity,
-        purchasePriceUnit: purchasePrice,
-        calculatedTaxUnit: taxPerUnitRounded,
-        calculatedTotalPriceWithouthTax: totalWithouthTax,
-        calculatedTotalTax: taxAmountRounded,
+        purchasePriceUnit: purchasePriceDecimal.toNumber(),
+        calculatedTaxUnit: taxPerUnit.toNumber(),
+        calculatedTotalPriceWithouthTax: totalWithouthTax.toNumber(),
+        calculatedTotalPriceWithTax: totalWithTax.toNumber(),
+        calculatedTotalTax: totalTax.toNumber(),
       });
 
       await this.orderDetailRepo.save(orderDetail);
