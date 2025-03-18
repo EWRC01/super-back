@@ -21,6 +21,9 @@ export class User {
   @Column({ type: 'varchar', length: 255, nullable: false, select: false})
   password: string;
 
+  @Column({type: 'boolean', default: false, nullable: false})
+  isAdmin: boolean;
+
   @OneToMany(() => Sale, (sale) => sale.user, {onDelete: 'CASCADE'})
   sales: Sale[];
 

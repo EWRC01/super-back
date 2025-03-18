@@ -1,6 +1,6 @@
 // src/users/dto/update-user.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, Length, IsPhoneNumber } from 'class-validator';
+import { IsString, IsOptional, Length, IsPhoneNumber, IsBoolean } from 'class-validator';
 
 export class UpdateUserDto {
   @ApiProperty({
@@ -42,4 +42,10 @@ export class UpdateUserDto {
   @IsOptional()
   @Length(8, 100)
   password?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  @ApiProperty({ example: true, description: 'Indica si el usuario es administrador', required: false })
+  isAdmin?: boolean;
+
 }

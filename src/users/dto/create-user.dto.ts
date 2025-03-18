@@ -1,6 +1,6 @@
 // src/users/dto/create-user.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, Length, IsPhoneNumber } from 'class-validator';
+import { IsString, IsNotEmpty, Length, IsPhoneNumber, IsBoolean } from 'class-validator';
 
 export class CreateUserDto {
   @ApiProperty({
@@ -42,4 +42,13 @@ export class CreateUserDto {
   @IsNotEmpty()
   @Length(8, 100)
   password: string;
+
+  @IsBoolean()
+  @IsNotEmpty()
+  @ApiProperty({
+    example: 'false',
+    description: 'Indica si el usuario es administrador',
+    required: true
+  })
+  isAdmin: boolean;
 }

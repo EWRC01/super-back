@@ -24,6 +24,7 @@ export class UsersService {
     const user = this.userRepository.create({
       ...createUserDto,
       password: hashedPassword,
+      isAdmin: createUserDto.isAdmin ?? false, // Si no se envia, por defecto es false
     });
     return this.userRepository.save(user);
   }
@@ -35,7 +36,7 @@ export class UsersService {
   async loginUser(loginUserDto: LoginUserDto) {
     const user = await this.userRepository.findOne({
       where: { username: loginUserDto.username },
-      select: ['id', 'username', 'name', 'phone', 'password'], // Incluye la contraseña explícitamente
+      select: ['id', 'username', 'name', 'phone', 'password', 'isAdmin'], // Incluye la contraseña explícitamente
     });
   
     if (!user) {
@@ -67,7 +68,15 @@ export class UsersService {
     if (!userExists) { throw new HttpException('User not found', HttpStatus.NOT_FOUND); }
 
     const user = await this.getUserById(id);
+
+    // Encriptamos la password en el update
+    
+    if (updateUserDto.password) {
+      updateUserDto.password = await bcrypt.hash(updateUserDto.password, 10);
+    }
+
     Object.assign(user, updateUserDto);
+
     return this.userRepository.save(user);
   }
 
