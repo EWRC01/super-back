@@ -36,7 +36,6 @@ export class CashRegisterService {
     cashRegister.date = currentDate; // Fecha con zona horaria
     cashRegister.cashInHand = initialCash;
     cashRegister.totalSales = 0;
-    cashRegister.totalPayments = 0;
     cashRegister.expectedCash = 0;
     cashRegister.discrepancy = 0;
     cashRegister.state = StateCashRegister.OPEN;

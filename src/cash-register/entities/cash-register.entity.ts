@@ -17,9 +17,6 @@ export class CashRegister {
   totalSales: number; // Total de ventas del día
 
   @Column('decimal', { precision: 10, scale: 2 })
-  totalPayments: number; // Total de pagos del día
-
-  @Column('decimal', { precision: 10, scale: 2 })
   expectedCash: number; // Efectivo esperado en caja (calculado como totalSales)
 
   @Column('decimal', { precision: 10, scale: 2 })
