@@ -32,7 +32,10 @@ import { OrderdetailsModule } from './orderdetails/orderdetails.module';
         database: configService.get('DB_NAME'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: true,
-        logging: false
+        logging: false,
+        extra: {
+          decimalNumbers: true, // Forzar numeros
+        }
       }),
       inject: [ConfigService],
     }),
