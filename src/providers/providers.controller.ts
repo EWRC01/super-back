@@ -24,6 +24,13 @@ export class ProvidersController {
     return this.providerService.findAll();
   }
 
+  @Get('/total-providers')
+  @ApiOperation({ summary: 'Obtener el numero total de proveedores' })
+  @ApiResponse({ status: 200, description: 'Numero total de proveedores' })
+  async getTotalProviders() {
+    return this.providerService.findTotalProviders();
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Obtener un proveedor por ID' })
   @ApiResponse({ status: 200, description: 'Proveedor encontrado' })

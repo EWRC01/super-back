@@ -25,6 +25,12 @@ export class ProvidersService {
     return await this.providerRepository.find();
   }
 
+  async findTotalProviders(): Promise<Number> {
+    const providers = await this.providerRepository.find();
+
+    return providers.length;
+  }
+
   async findOne(id: number): Promise<Provider> {
     const provider = await this.providerRepository.findOneBy({ id });
     if (!provider) {
