@@ -51,4 +51,13 @@ export class CreateUserDto {
     required: true
   })
   isAdmin: boolean;
+
+  @IsBoolean()
+  @IsNotEmpty()
+  @ApiProperty({
+    example: 'false',
+    description: 'Indica si el usuario esta activo dentro de la empresa',
+    required: true
+  })
+  isActive: boolean;
 }

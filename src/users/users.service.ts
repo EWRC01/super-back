@@ -25,6 +25,7 @@ export class UsersService {
       ...createUserDto,
       password: hashedPassword,
       isAdmin: createUserDto.isAdmin ?? false, // Si no se envia, por defecto es false
+      isActive: createUserDto.isActive ?? true, // Si no se envia, por defecto es true
     });
     return this.userRepository.save(user);
   }
@@ -36,7 +37,7 @@ export class UsersService {
   async loginUser(loginUserDto: LoginUserDto) {
     const user = await this.userRepository.findOne({
       where: { username: loginUserDto.username },
-      select: ['id', 'username', 'name', 'phone', 'password', 'isAdmin'], // Incluye la contraseña explícitamente
+      select: ['id', 'username', 'name', 'phone', 'password', 'isAdmin', 'isActive'], // Incluye la contraseña explícitamente
     });
   
     if (!user) {
@@ -49,6 +50,23 @@ export class UsersService {
       throw new UnauthorizedException('Credenciales incorrectas');
     }
   
+    return user;
+  }
+
+  async changeState(id: number) {
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new HttpException(`User with ID ${id} not found`, HttpStatus.NOT_FOUND);
+    }
+
+    // Invertir el valor actual del usuario
+
+    user.isActive = !user.isActive;
+
+    // Guardar el cambio en la base de datos
+
+    await this.userRepository.save(user);
+
     return user;
   }
   

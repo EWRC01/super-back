@@ -48,4 +48,12 @@ export class UpdateUserDto {
   @ApiProperty({ example: true, description: 'Indica si el usuario es administrador', required: false })
   isAdmin?: boolean;
 
+  @IsBoolean()
+  @IsOptional()
+  @ApiProperty({
+    example: 'false',
+    description: 'Indica si el usuario esta activo dentro de la empresa',
+    required: true
+  })
+  isActive: boolean;
 }

@@ -180,6 +180,13 @@ export class UsersController {
     return this.usersService.getTodayIncomeByUser(userId);
   }
 
+  @Post(':id/isActive')
+  @ApiOperation({ summary: 'Cambiar el estado isActive del usuario'})
+  @ApiParam({ name: 'id', type: Number, description: 'ID del usuario' })
+  async changeState(@Param('id') id: number) {
+    return this.usersService.changeState(id);
+  }
+
   @Get(':id/weekly-income')
   @ApiOperation({ summary: 'Obtener los ingresos de un usuario esta semana' })
   @ApiResponse({
