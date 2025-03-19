@@ -2,14 +2,16 @@ import { NestApplication, NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { join } from 'path';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestApplication>(AppModule);
+  const configService = app.get(ConfigService)
 
   app.useStaticAssets(join(__dirname, '..', 'uploads')),
 
   app.enableCors({
-    origin: 'http://localhost:4000',
+    origin: configService.get<string>('FRONTEND_URL', 'http://localhost:4000'), // Valor por defecto si no se provee
     methods: 'GET,POST,PATCH,PUT,DELETE,OPTIONS',
     allowHeaders: 'Content-Type, Authorization',
     credentials: true
@@ -44,7 +46,7 @@ async function bootstrap() {
 
   SwaggerModule.setup('api', app, document); // Configurar Swagger ANTES de app.listen()
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(configService.get<number>('PORT', 3000));
 }
 bootstrap();
 
