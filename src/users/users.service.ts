@@ -82,7 +82,11 @@ export class UsersService {
   
 
   async getUserById(id: number) {
-    const user = await this.userRepository.findOne({ where: { id } });
+    const user = await this.userRepository.findOne({ 
+      where: { id },
+      select: ['id', 'username', 'name', 'phone', 'password', 'isAdmin', 'isActive']
+     });
+
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
@@ -121,6 +125,11 @@ export class UsersService {
 
   async verifyPassword(userId: number, password: string) {
     const user = await this.getUserById(userId);
+
+    if (!user) { throw new HttpException(`User with ID: ${userId} Not Found!`, HttpStatus.NOT_FOUND)}
+
+    if (!user.password) { throw new HttpException(`User password not found!`, HttpStatus.INTERNAL_SERVER_ERROR)};
+    
     return bcrypt.compare(password, user.password);
   }
 
