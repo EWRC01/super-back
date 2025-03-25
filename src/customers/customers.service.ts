@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Customer } from './entities/customer.entity';
@@ -38,11 +38,28 @@ export class CustomersService {
 
   async remove(id: number): Promise<void> {
 
-    const customer = await this.customersRepository.findOne({ where: { id } });
+    const customer = await this.customersRepository.findOne({ where: { id:id } });
 
     if (!customer) {throw new NotFoundException(`Customer with ID ${id} not found`);}
 
-    await this.customersRepository.delete(id);
+    if(customer.isActive === false) { throw new HttpException(`El cliente con ID: ${id} ya se encuentra inactivo`, HttpStatus.BAD_REQUEST)};
+
+    customer.isActive = false
+
+    await this.customersRepository.save(customer);
+  }
+
+  async active(id: number): Promise<void> {
+    
+    const customer = await this.customersRepository.findOne({ where: { id:id }});
+
+    if (!customer) {throw new NotFoundException(`Customer with ID ${id} not found`);}
+
+    if(customer.isActive === true) { throw new HttpException(`El cliente con ID: ${id} ya se encuentra activo`, HttpStatus.BAD_REQUEST)};
+
+    customer.isActive = true
+
+    await this.customersRepository.save(customer);
   }
 
   async getSalesByCustomer(id: number): Promise<any> {

@@ -14,6 +14,9 @@ export class Customer {
   @Column({ type: 'varchar', length: 20, nullable: true })
   phone: string;
 
+  @Column({ type: 'boolean', nullable: false, default: true })
+  isActive: boolean;
+
   @OneToMany(() => Sale, (sale) => sale.customer, {onDelete: 'CASCADE'})
   sales: Sale[];
 

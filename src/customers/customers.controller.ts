@@ -44,8 +44,16 @@ export class CustomersController {
   @ApiOperation({ summary: 'Delete a customer' })
   @ApiResponse({ status: 200, description: 'The customer has been successfully deleted.' })
   @ApiResponse({ status: 404, description: 'Customer not found.' })
-  remove(@Param('id') id: string) {
-    return this.customersService.remove(+id);
+  remove(@Param('id') id: number) {
+    return this.customersService.remove(id);
+  }
+
+  @Post('activate/:id')
+  @ApiOperation({summary: 'Activate a customer'})
+  @ApiResponse({status: 200, description: 'Custoamer activated successfully'})
+  @ApiResponse({status: 404, description: 'Customer Not Found'})
+  activate(@Param('id') id: number) {
+    return this.customersService.active(id)
   }
 
   @Get('sales-by-customer/:id')
