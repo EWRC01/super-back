@@ -76,6 +76,13 @@ export class CreateProductDto {
   wholesaleQuantity?: number;
 
   @ApiProperty({
+    description: 'Campo para saber si el producto esta activo o no',
+    example: false,
+    default: false
+  })
+  isDeleted: boolean;
+
+  @ApiProperty({
     description: 'ID de la marca asociada al producto',
     example: 1,
   })

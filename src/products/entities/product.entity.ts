@@ -39,6 +39,9 @@ export class Product {
   @Column({ type: 'decimal', precision: 8, scale: 2, nullable: true })
   wholesaleQuantity: number;
 
+  @Column({ type: 'boolean', nullable: false, default: false})
+  isDeleted: boolean;
+
   @ManyToOne(() => Brand, (brand) => brand.products)
   @JoinColumn({ name: 'brandId' })
   brand: Brand;

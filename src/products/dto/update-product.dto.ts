@@ -76,6 +76,12 @@ export class UpdateProductDto {
       @IsOptional()
       @IsNumber()
       wholesaleQuantity?: number;
+
+      @ApiPropertyOptional({
+        description: 'Campo para saber si el producto esta activo o no',
+        example: true,
+      })
+      isDeleted?: boolean;
     
       @ApiProperty({
         description: 'ID de la marca asociada al producto',

@@ -93,6 +93,12 @@ export class ProductsController {
     return this.productsService.update(id, updateProductDto);
   }
 
+  @Post('activate-product/:id')
+  @ApiOperation({ summary: 'Activate a product' })
+  async activate(@Param('id') id: number) {
+    return this.productsService.active(id);
+  }
+
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a product' })
   async remove(@Param('id') id: number) {
