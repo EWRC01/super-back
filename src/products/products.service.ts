@@ -197,10 +197,43 @@ export class ProductsService {
    * Elimina un producto de la base de datos.
    */
   async remove(id: number) {
-    await this.findOne(id);
-    await this.productRepository.delete(id);
+    const product = await this.productRepository.findOne({where: {id: id}})
+
+    if (!product) { return new HttpException(`Producto con ID: ${id} no encontrado`, HttpStatus.NOT_FOUND)};
+
+    if(product.isDeleted === true) { return new HttpException(`El producto con el ID: ${id} ya se encuentra eliminado`, HttpStatus.OK)};
+
+    product.isDeleted = true
+
+    product.code = `DELETED_PRODUCT_${product.code}` 
+
+    await this.productRepository.save(product);
+
     return { message: 'Producto eliminado' };
   }
+
+    /**
+   * Activa un producto de la base de datos.
+   */
+    async active(id: number) {
+      const product = await this.productRepository.findOne({where: {id: id}})
+  
+      if (!product) { return new HttpException(`Producto con ID: ${id} no encontrado`, HttpStatus.NOT_FOUND)};
+
+
+      if(product.isDeleted === false) { return new HttpException(`El producto con el ID: ${id} ya se encuentra activo`, HttpStatus.OK)};
+  
+      product.isDeleted = false;
+  
+        // Restaurar el código original si fue modificado
+      if (product.code.startsWith('DELETED_')) {
+         product.code = product.code.replace('DELETED_PRODUCT_', '');
+      }
+  
+      await this.productRepository.save(product);
+  
+      return { message: 'Producto activado' };
+    }
 
   /**
    * Agrega stock a un producto.
