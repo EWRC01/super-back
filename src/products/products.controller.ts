@@ -27,6 +27,12 @@ export class ProductsController {
     return this.productsService.findAll(paginationDto);
   }
 
+  @Get('findDeleted/')
+  @ApiOperation({ summary: 'Retrieve all products' })
+  async findAllDeleted(@Query() paginationDto: PaginationDto) {
+    return this.productsService.findAllDeleted(paginationDto);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get product details by ID' })
   async findOne(@Param('id') id: number) {

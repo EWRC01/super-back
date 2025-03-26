@@ -45,6 +45,7 @@ export class ProductsService {
     const [data, total] = await this.productRepository.findAndCount({
       take: Number(limit),
       skip: Number((page - 1)) * Number(limit),
+      where: {isDeleted: false},
       relations: ['brand', 'category']
     })
 
@@ -58,6 +59,28 @@ export class ProductsService {
     }
   }
 
+    /**
+   * Obtiene todos los productos eliminados.
+   */
+    async findAllDeleted(paginationDto: PaginationDto) {
+      const {page, limit} = paginationDto;
+      const [data, total] = await this.productRepository.findAndCount({
+        take: Number(limit),
+        skip: Number((page - 1)) * Number(limit),
+        where: { isDeleted: true },
+        relations: ['brand', 'category']
+      })
+  
+      return {
+        data,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+  
+      }
+    }
+
   /**
    * Obtiene el valor total del inventario.
    */
@@ -65,6 +88,7 @@ export class ProductsService {
     const result = await this.productRepository
       .createQueryBuilder('product')
       .select('SUM(product.salePrice * product.stock)', 'totalInventory')
+      .where('product.isDeleted = false')
       .getRawOne();
     return result.totalInventory || 0;
   }
@@ -76,6 +100,7 @@ export class ProductsService {
     const result = await this.productRepository
       .createQueryBuilder('product')
       .select('SUM((product.salePrice - product.purchasePrice) * product.stock)', 'inventoryProfit')
+      .where('product.isDeleted = false')
       .getRawOne();
     return result.inventoryProfit || 0;
   }
@@ -85,10 +110,14 @@ export class ProductsService {
    */
   async calculateProfitByProduct(identifier: string | number) {
     const product = await this.productRepository.findOne({
-      where: typeof identifier === 'number' ? { id: identifier } : { code: identifier },
+      where: typeof identifier === 'number' ? 
+      { id: identifier, isDeleted: false } 
+      : { code: identifier, isDeleted: false },
     });
     if (!product) throw new NotFoundException('Product not found');
+
     const profit = (product.salePrice - product.purchasePrice) * product.stock;
+
     return { product, profit };
   }
 
@@ -105,7 +134,9 @@ export class ProductsService {
    */
   async getStockByProduct(identifier: number | string): Promise<number> {
     const product = await this.productRepository.findOne({
-      where: typeof identifier === 'number' ? { id: identifier } : { code: identifier },
+      where: typeof identifier === 'number' ? 
+      { id: identifier, isDeleted: false } 
+      : { code: identifier, isDeleted: false },
     });
     if (!product) throw new NotFoundException('Product Not Found!');
     return product.stock;
@@ -204,6 +235,7 @@ export class ProductsService {
     if(product.isDeleted === true) { return new HttpException(`El producto con el ID: ${id} ya se encuentra eliminado`, HttpStatus.OK)};
 
     product.isDeleted = true
+    product.stock = 0;
 
     product.code = `DELETED_PRODUCT_${product.code}` 
 

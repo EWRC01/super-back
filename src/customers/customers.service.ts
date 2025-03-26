@@ -18,7 +18,7 @@ export class CustomersService {
   }
 
   async findAll(): Promise<Customer[]> {
-    return this.customersRepository.find();
+    return this.customersRepository.find({where: {isActive: true}});
   }
 
   async findOne(id: number): Promise<Customer> {
