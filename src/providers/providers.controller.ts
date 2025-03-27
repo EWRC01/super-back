@@ -24,6 +24,13 @@ export class ProvidersController {
     return this.providerService.findAll();
   }
 
+  @Get('findDelete/')
+  @ApiOperation({ summary: 'Obtener todos los proveedores Eliminados' })
+  @ApiResponse({ status: 200, description: 'Lista de proveedores Eliminados' })
+  async findAllDeleted() {
+    return this.providerService.findAllDeleted();
+  }
+
   @Get('/total-providers')
   @ApiOperation({ summary: 'Obtener el numero total de proveedores' })
   @ApiResponse({ status: 200, description: 'Numero total de proveedores' })
@@ -51,5 +58,13 @@ export class ProvidersController {
   @ApiResponse({ status: 200, description: 'Proveedor eliminado correctamente' })
   async remove(@Param('id', ParseIntPipe) id: number) {
     return this.providerService.remove(id);
+  }
+
+  @Post('activate/:id')
+  @ApiOperation({ summary: 'Activar un proveedor' })
+  @ApiResponse({ status: 201, description: 'Proveedor activado exitosamente' })
+  @ApiResponse({ status: 403, description: 'El proveedor no se encontro' })
+  async activate(@Param('id') id: number) {
+    return this.providerService.active(id);
   }
 }

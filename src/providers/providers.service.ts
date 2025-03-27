@@ -22,7 +22,11 @@ export class ProvidersService {
   }
 
   async findAll(): Promise<Provider[]> {
-    return await this.providerRepository.find();
+    return await this.providerRepository.find({where: {isActive: true}});
+  }
+
+  async findAllDeleted(): Promise<Provider[]> {
+    return await this.providerRepository.find({where: {isActive: false}});
   }
 
   async findTotalProviders(): Promise<Number> {
@@ -53,7 +57,23 @@ export class ProvidersService {
     const provider = await this.providerRepository.findOne({where: {id: id}});
 
     if (!provider) { throw new HttpException(`Provider with ID: ${id} not found!`, HttpStatus.NOT_FOUND )};
-    
-    await this.providerRepository.remove(provider);
+
+    if (provider.isActive === false) { throw new HttpException(`Provider with ID: ${id} is already deleted`, HttpStatus.OK )};
+
+    provider.isActive = false;
+
+    await this.providerRepository.save(provider);
+  }
+
+  async active(id: number): Promise<void> {
+    const provider = await this.providerRepository.findOne({where: {id: id}});
+
+    if (!provider) { throw new HttpException(`Provider with ID: ${id} not found!`, HttpStatus.NOT_FOUND )};
+
+    if (provider.isActive === true) { throw new HttpException(`Provider with ID: ${id} is already active`, HttpStatus.OK )};
+
+    provider.isActive = true;
+
+    await this.providerRepository.save(provider);
   }
 }

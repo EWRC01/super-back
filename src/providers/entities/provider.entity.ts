@@ -19,6 +19,9 @@ export class Provider {
     @Column({ type: 'varchar', length: 10, nullable: false})
     phone: string;
 
+    @Column({ type: 'boolean', nullable: false, default: true })
+    isActive: boolean;
+
     @OneToMany(() => Brand, (brand) => brand.provider)
     brands: Brand[];
 

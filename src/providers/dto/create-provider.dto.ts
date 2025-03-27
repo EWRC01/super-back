@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, Length, Matches } from 'class-validator';
+import { IsString, IsNotEmpty, Length, Matches, IsBoolean } from 'class-validator';
 
 export class CreateProviderDto {
   @ApiProperty({ example: 'Distribuidora El Salvador', description: 'Nombre del proveedor' })
@@ -19,6 +19,11 @@ export class CreateProviderDto {
   @IsNotEmpty()
   @Length(10, 255)
   address: string;
+
+  @ApiProperty({ example: true, description: 'El proveedor esta activo', default: true })
+  @IsBoolean()
+  @IsNotEmpty()
+  isActive: boolean;
 
   @ApiProperty({ example: '2222-3333', description: 'Teléfono del proveedor' })
   @IsString()

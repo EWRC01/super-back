@@ -7,4 +7,8 @@ export class UpdateProviderDto extends PartialType(CreateProviderDto) {
   @IsOptional()
   @Matches(/^\d{4}-\d{6}-\d{3}-\d{1}$/, { message: 'El NIT debe tener el formato ####-######-###-#' })
   taxId?: string;
+
+  @ApiProperty({ example: true, description: 'Describe si el proveedor esta activo o no' })
+  @IsOptional()
+  isActive?: boolean;
 }
