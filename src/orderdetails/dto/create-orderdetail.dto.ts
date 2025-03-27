@@ -111,4 +111,8 @@ export class CreateOrderDetailDto {
   @ValidateNested({ each: true })
   @Type(() => CreateOrderDetailProductDto)
   products: CreateOrderDetailProductDto[];
+
+  @ApiProperty({ example: true, description: 'Estatus del detalle', default: true })
+  @IsBoolean({message: 'Debe ser un valor booleano'})
+  isActive: boolean;
 }

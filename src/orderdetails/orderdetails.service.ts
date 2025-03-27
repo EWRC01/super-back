@@ -108,7 +108,15 @@ export class OrderDetailsService {
   }
 
   async findAll() {
-    return await this.orderDetailRepo.find({ relations: ['product'] });
+    return await this.orderDetailRepo.find({ 
+      where: {isActive: true},
+      relations: ['product'] });
+  }
+
+  async findAllDeleted() {
+    return await this.orderDetailRepo.find({ 
+      where: {isActive: false},
+      relations: ['product'] });
   }
 
   async findOne(invoiceNumber: string) {
@@ -261,8 +269,14 @@ async remove(id: number): Promise<void> {
   });
 
   if (!orderDetail) {
-    throw new NotFoundException(`OrderDetail con ID ${id} no encontrado`);
+    throw new HttpException(`OrderDetail con ID ${id} no encontrado`, HttpStatus.NOT_FOUND);
   }
+
+  if (orderDetail.isActive === false) {
+    throw new HttpException(`OrderDetail con ID ${id} ya esta eliminada!`, HttpStatus.BAD_REQUEST);
+  }
+
+  orderDetail.isActive = false;
 
   // Restaurar stock del producto
   const product = orderDetail.product;
@@ -270,7 +284,32 @@ async remove(id: number): Promise<void> {
   await this.productRepo.save(product);
 
   // Eliminar OrderDetail
-  await this.orderDetailRepo.delete(id);
+  await this.orderDetailRepo.save(orderDetail);
+}
+
+async active(id: number): Promise<void> {
+  const orderDetail = await this.orderDetailRepo.findOne({ 
+    where: { id },
+    relations: ['product']
+  });
+
+  if (!orderDetail) {
+    throw new HttpException(`OrderDetail con ID ${id} no encontrado`, HttpStatus.NOT_FOUND);
+  }
+
+  if (orderDetail.isActive === true) {
+    throw new HttpException(`OrderDetail con ID ${id} ya esta activa!`, HttpStatus.BAD_REQUEST);
+  }
+
+  orderDetail.isActive = true;
+
+  // Restaurar stock del producto
+  const product = orderDetail.product;
+  product.stock += orderDetail.quantity;
+  await this.productRepo.save(product);
+
+  // Eliminar OrderDetail
+  await this.orderDetailRepo.save(orderDetail);
 }
 
 }

@@ -50,6 +50,26 @@ export class OrderDetailsController {
     return await this.orderDetailsService.findAll();
   }
 
+  @Get('findDeleted/')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Obtener todos los detalles de órdenes eliminados',
+    description: 'Obtiene una lista completa de todos los detalles de órdenes eliminadas registrados en el sistema'
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Lista de detalles de órdenes eliminadas obtenida exitosamente',
+    type: OrderDetail,
+    isArray: true
+  })
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'Error interno del servidor'
+  })
+  async findAllDeleted() {
+    return await this.orderDetailsService.findAllDeleted();
+  }
+
   @Get('orderDetail/:invoiceNumber')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -261,5 +281,29 @@ async getOrderSummary(@Param('invoiceNumber') invoiceNumber: string) {
   })
   async remove(@Param('id') id: number): Promise<void> {
     await this.orderDetailsService.remove(id);
+  }
+
+  @Post('active/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Activar un detalle de orden',
+    description: 'Activar un detalle de orden por su ID'
+  })
+  @ApiParam({
+    name: 'id',
+    type: Number,
+    description: 'ID del detalle de orden a activar',
+    example: 1
+  })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'Detalle de orden activado exitosamente'
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Detalle de orden no encontrado'
+  })
+  async active(@Param('id') id: number): Promise<void> {
+    await this.orderDetailsService.active(id);
   }
 }

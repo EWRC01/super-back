@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsInt, IsPositive, IsOptional, IsNumber } from 'class-validator';
+import { IsInt, IsPositive, IsOptional, IsNumber, IsBoolean } from 'class-validator';
 
 export class UpdateOrderDetailDto {
   @ApiPropertyOptional({ example: 15, description: 'Nueva cantidad del producto' })
@@ -12,4 +12,8 @@ export class UpdateOrderDetailDto {
   @IsOptional()
   @IsNumber()
   purchasePrice?: number;
+
+  @ApiPropertyOptional({ example: true, description: 'Estatus del detalle', default: true })
+  @IsBoolean({message: 'Debe ser un valor booleano'})
+  isActive?: boolean;
 }

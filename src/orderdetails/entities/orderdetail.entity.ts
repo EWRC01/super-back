@@ -7,7 +7,7 @@ export class OrderDetail {
   @PrimaryGeneratedColumn({ unsigned: true })
   id: number;
 
-  @ManyToOne(() => Order, (order) => order.orderDetails, { onDelete: 'CASCADE', nullable: false })
+  @ManyToOne(() => Order, (order) => order.orderDetails, { nullable: false })
   @JoinColumn({ name: 'invoiceNumber', referencedColumnName: 'invoiceNumber' })
   order: Order;
 
@@ -32,4 +32,7 @@ export class OrderDetail {
 
   @Column({type: 'decimal', precision: 10, scale: 2, nullable: false })
   calculatedTotalTax: number; // IVA total calculado
+
+  @Column({ type: 'boolean', default: true, nullable: false})
+  isActive: boolean;
 }
