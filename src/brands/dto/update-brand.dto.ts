@@ -1,4 +1,4 @@
-import { IsString, Length, IsNumber } from 'class-validator';
+import { IsString, Length, IsNumber, IsBoolean } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateBrandDto  {
@@ -10,4 +10,8 @@ export class UpdateBrandDto  {
       @ApiPropertyOptional({ example: 1, description: 'ID del proveedor asociado a la marca' })
       @IsNumber({}, { message: 'El ID del proveedor debe ser un número' })
       providerId?: number;
+
+      @ApiPropertyOptional({ example: true, description: 'Indica si el proveedor esta activo' })
+      @IsBoolean()
+      isActive?: boolean;
 }

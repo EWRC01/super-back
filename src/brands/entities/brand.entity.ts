@@ -11,6 +11,9 @@ export class Brand {
   @Column({ type: 'varchar', length: 50, nullable: false })
   brandName: string;
 
+  @Column({ type: 'boolean', nullable: false, default: true })
+  isActive: boolean;
+
   @ManyToOne(() => Provider, (provider) => provider.brands, {nullable: false})
   @JoinColumn({name: 'providerId'})
   provider: Provider;

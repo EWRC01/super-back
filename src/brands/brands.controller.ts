@@ -24,6 +24,13 @@ export class BrandsController {
     return this.brandsService.findAll();
   }
 
+  @Get('deleted/')
+  @ApiOperation({ summary: 'Obtener todas las marcas Eliminadas' })
+  @ApiResponse({ status: 200, description: 'Lista de marcas Eliminadas', type: [Brand] })
+  findAllDeleted(): Promise<Brand[]> {
+    return this.brandsService.findAllDeleted();
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Obtener una marca por ID' })
   @ApiResponse({ status: 200, description: 'Marca encontrada', type: Brand })
@@ -45,5 +52,13 @@ export class BrandsController {
   @ApiResponse({ status: 404, description: 'Marca no encontrada' })
   remove(@Param('id') id: number): Promise<void> {
     return this.brandsService.remove(id);
+  }
+
+  @Post('active/:id')
+  @ApiOperation({ summary: 'Activar una marca' })
+  @ApiResponse({ status: 200, description: 'Marca activada exitosamente' })
+  @ApiResponse({ status: 404, description: 'Marca no encontrada' })
+  active(@Param('id') id: number): Promise<void> {
+    return this.brandsService.active(id);
   }
 }

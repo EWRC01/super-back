@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Brand } from './entities/brand.entity';
@@ -35,7 +35,15 @@ export class BrandsService {
   }
 
   async findAll(): Promise<Brand[]> {
-    return await this.brandRepository.find({ relations: ['products', 'provider'] });
+    return await this.brandRepository.find({ 
+      where: {isActive: true} ,
+      relations: ['products', 'provider'] });
+  }
+
+  async findAllDeleted(): Promise<Brand[]> {
+    return await this.brandRepository.find({ 
+      where: {isActive: false} ,
+      relations: ['products', 'provider'] });
   }
 
   async findOne(id: number): Promise<Brand> {
@@ -69,9 +77,26 @@ export class BrandsService {
   }
 
   async remove(id: number): Promise<void> {
-    const result = await this.brandRepository.delete(id);
-    if (result.affected === 0) {
-      throw new NotFoundException(`No se encontró la marca con ID ${id} para eliminar`);
-    }
+    const brand = await this.brandRepository.findOne({ where: {id:id}})
+
+    if(!brand) { throw new HttpException(`Brand with ID: ${id} not found!`, HttpStatus.NOT_FOUND) };
+
+    if (brand.isActive === false) {  throw new HttpException(`Brand with ID: ${id} is already deleted!`, HttpStatus.BAD_REQUEST)};
+
+    brand.isActive = false
+
+    await this.brandRepository.save(brand);
+  }
+
+  async active(id: number): Promise<void> {
+    const brand = await this.brandRepository.findOne({ where: {id:id}})
+
+    if(!brand) { throw new HttpException(`Brand with ID: ${id} not found!`, HttpStatus.NOT_FOUND) };
+
+    if (brand.isActive === true) {  throw new HttpException(`Brand with ID: ${id} is already active!`, HttpStatus.BAD_REQUEST)};
+
+    brand.isActive = true
+
+    await this.brandRepository.save(brand);
   }
 }
