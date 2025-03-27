@@ -9,7 +9,7 @@ export class Product {
   @PrimaryGeneratedColumn({ unsigned: true })
   id: number;
 
-  @Column({ type: 'varchar', length: 50, nullable: false, unique: false })
+  @Column({ type: 'varchar', length: 50, nullable: false, unique: true })
   code: string;
 
   @Column({ type: 'varchar', length: 255, nullable: false })
@@ -28,7 +28,7 @@ export class Product {
   stock: number;
 
   @Column({type: 'int', nullable: false})
-  reservedStock: number;
+  damagedStock: number;
 
   @Column({ type: 'boolean', nullable: true })
   wholesaleSale: boolean;
