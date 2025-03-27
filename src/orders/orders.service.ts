@@ -35,7 +35,15 @@ export class OrdersService {
   }
 
   async findAll(): Promise<Order[]> {
-    return await this.orderRepository.find({ relations: ['provider', 'orderDetails'] });
+    return await this.orderRepository.find({ 
+      where: {isActive: true}, 
+      relations: ['provider', 'orderDetails'] });
+  }
+
+  async findAllDeleted(): Promise<Order[]> {
+    return await this.orderRepository.find({ 
+      where: {isActive: false}, 
+      relations: ['provider', 'orderDetails'] });
   }
 
   async findOne(id: number): Promise<Order> {
@@ -65,7 +73,23 @@ export class OrdersService {
     const order = await this.orderRepository.findOne({where: {id}});
 
     if (!order) { throw new HttpException(`Order With ID: ${id} not found!`, HttpStatus.NOT_FOUND)};
+
+    if (order.isActive === false) { throw new HttpException(`Order With ID: ${id} is already deleted!`, HttpStatus.BAD_REQUEST) }
+
+    order.isActive = false;
     
-    await this.orderRepository.remove(order);
+    await this.orderRepository.save(order);
+  }
+
+  async active(id: number): Promise<void> {
+    const order = await this.orderRepository.findOne({where: {id}});
+
+    if (!order) { throw new HttpException(`Order With ID: ${id} not found!`, HttpStatus.NOT_FOUND)};
+
+    if (order.isActive === true) { throw new HttpException(`Order With ID: ${id} is already active!`, HttpStatus.BAD_REQUEST) }
+
+    order.isActive = true;
+    
+    await this.orderRepository.save(order);
   }
 }

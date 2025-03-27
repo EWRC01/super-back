@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsDate, IsNumber, Min, IsDateString } from 'class-validator';
+import { IsNotEmpty, IsString, IsDate, IsNumber, Min, IsDateString, IsBoolean } from 'class-validator';
 
 export class CreateOrderDto {
   @ApiProperty({ example: 1, description: 'ID del proveedor que realiza el pedido' })
@@ -17,4 +17,8 @@ export class CreateOrderDto {
   @IsNotEmpty({ message: 'El número de factura no puede estar vacío' })
   @IsString({ message: 'El número de factura debe ser una cadena de texto' })
   invoiceNumber: string;
+
+  @ApiProperty({ example: true, description: 'Estatus del pedido', default: true })
+  @IsBoolean({message: 'Debe ser un valor booleano'})
+  isActive: boolean;
 }

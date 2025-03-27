@@ -24,6 +24,13 @@ export class OrdersController {
     return this.orderService.findAll();
   }
 
+  @Get('findDeleted/')
+  @ApiOperation({ summary: 'Obtener todos los pedidos eliminados' })
+  @ApiResponse({ status: 200, description: 'Lista de pedidos eliminados', type: [Order] })
+  async findAllDeleted(): Promise<Order[]> {
+    return this.orderService.findAllDeleted();
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Obtener un pedido por ID' })
   @ApiResponse({ status: 200, description: 'Detalles del pedido', type: Order })
@@ -49,5 +56,13 @@ export class OrdersController {
   @ApiResponse({ status: 404, description: 'Pedido no encontrado' })
   async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return this.orderService.remove(id);
+  }
+
+  @Post('active/:id')
+  @ApiOperation({ summary: 'Activar un pedido' })
+  @ApiResponse({ status: 200, description: 'Pedido Activado' })
+  @ApiResponse({ status: 404, description: 'Pedido no encontrado' })
+  async active(@Param('id', ParseIntPipe) id: number): Promise<void> {
+    return this.orderService.active(id);
   }
 }
