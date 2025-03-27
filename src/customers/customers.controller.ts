@@ -24,6 +24,13 @@ export class CustomersController {
     return this.customersService.findAll();
   }
 
+  @Get('deletedCustomers/')
+  @ApiOperation({ summary: 'Get all deleted customers' })
+  @ApiResponse({ status: 200, description: 'List of all deleted customers. '})
+  findAllDeleted() {
+    return this.customersService.findDeleted();
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get a customer by ID' })
   @ApiResponse({ status: 200, description: 'Customer details.' })
