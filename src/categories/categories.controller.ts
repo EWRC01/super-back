@@ -24,6 +24,13 @@ export class CategoriesController {
     return this.categoriesService.findAll();
   }
 
+  @Get('findAllDeleted/')
+  @ApiOperation({ summary: 'Obtener todas las categorías eliminadas' })
+  @ApiResponse({ status: 200, description: 'Lista de categorías eliminadas', type: [Category] })
+  findAllDeleted(): Promise<Category[]> {
+    return this.categoriesService.findAllDeleted();
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Obtener una categoría por ID' })
   @ApiResponse({ status: 200, description: 'Categoría encontrada', type: Category })
@@ -45,5 +52,13 @@ export class CategoriesController {
   @ApiResponse({ status: 404, description: 'Categoría no encontrada' })
   remove(@Param('id') id: number): Promise<void> {
     return this.categoriesService.remove(id);
+  }
+
+  @Post('active/:id')
+  @ApiOperation({ summary: 'Activar una categoría' })
+  @ApiResponse({ status: 200, description: 'Categoría eliminada exitosamente' })
+  @ApiResponse({ status: 404, description: 'Categoría no encontrada' })
+  active(@Param('id') id: number): Promise<void> {
+    return this.categoriesService.active(id);
   }
 }

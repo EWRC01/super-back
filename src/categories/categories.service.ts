@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Category } from './entities/category.entity';
@@ -18,7 +18,15 @@ export class CategoriesService {
   }
 
   async findAll(): Promise<Category[]> {
-    return await this.categoryRepository.find({ relations: ['products'] });
+    return await this.categoryRepository.find({ 
+      where:{isActive: true},
+      relations: ['products'] });
+  }
+
+  async findAllDeleted(): Promise<Category[]> {
+    return await this.categoryRepository.find({ 
+      where:{isActive: false},
+      relations: ['products'] });
   }
 
   async findOne(id: number): Promise<Category> {
@@ -36,9 +44,30 @@ export class CategoriesService {
   }
 
   async remove(id: number): Promise<void> {
-    const result = await this.categoryRepository.delete(id);
-    if (result.affected === 0) {
-      throw new NotFoundException(`No se encontró la categoría con ID ${id} para eliminar`);
-    }
+
+    const category = await this.categoryRepository.findOne({ where: { id: id }});
+
+    if (!category) { throw new HttpException(`La categoría con el ID ${id} no existe`, HttpStatus.NOT_FOUND) }
+
+    if (category.isActive === false) { throw new HttpException(`La categoría con el ID ${id} ya esta eliminada`, HttpStatus.BAD_REQUEST) }
+
+    category.isActive = false
+
+    await this.categoryRepository.save(category);
+    
+  }
+
+  async active(id: number): Promise<void> {
+
+    const category = await this.categoryRepository.findOne({ where: { id: id }});
+
+    if (!category) { throw new HttpException(`La categoría con el ID ${id} no existe`, HttpStatus.NOT_FOUND) }
+
+    if (category.isActive === true) { throw new HttpException(`La categoría con el ID ${id} ya esta activa`, HttpStatus.BAD_REQUEST) }
+
+    category.isActive = true
+
+    await this.categoryRepository.save(category);
+    
   }
 }
