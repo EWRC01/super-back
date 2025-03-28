@@ -23,7 +23,7 @@ import {
 } from '@nestjs/swagger';
 import { DamagedProduct } from './entities/damaged-product.entity';
 
-@ApiTags('Damaged Products - Gestión de Productos Dañados')
+@ApiTags('Damaged Products')
 @ApiBearerAuth()
 @Controller('damaged-products')
 export class DamagedProductsController {
