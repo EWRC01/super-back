@@ -19,6 +19,7 @@ import { ProvidersModule } from './providers/providers.module';
 import { OrdersModule } from './orders/orders.module';
 import { OrderdetailsModule } from './orderdetails/orderdetails.module';
 import { PrintModule } from './print/print.module';
+import { DamagedProductsModule } from './damaged-products/damaged-products.module';
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -51,7 +52,7 @@ import { PrintModule } from './print/print.module';
     ConfigurationModule, 
     QuotationProductsModule, 
     CashRegisterModule, 
-    TaxModule, EmployeesModule, EmployeePaymentsModule, ProvidersModule, OrdersModule, OrderdetailsModule, PrintModule
+    TaxModule, EmployeesModule, EmployeePaymentsModule, ProvidersModule, OrdersModule, OrderdetailsModule, PrintModule, DamagedProductsModule
   ],
   controllers: [],
   providers: [],

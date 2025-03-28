@@ -3,6 +3,7 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMan
 import { Category } from '../../categories/entities/category.entity';
 import { Brand } from '../../brands/entities/brand.entity';
 import { SoldProduct } from '../../soldproducts/entities/soldproduct.entity';
+import { DamagedProduct } from 'src/damaged-products/entities/damaged-product.entity';
 
 @Entity('products')
 export class Product {
@@ -27,9 +28,6 @@ export class Product {
   @Column({ type: 'int', nullable: false })
   stock: number;
 
-  @Column({type: 'int', nullable: false})
-  damagedStock: number;
-
   @Column({ type: 'boolean', nullable: true })
   wholesaleSale: boolean;
 
@@ -52,4 +50,7 @@ export class Product {
 
   @OneToMany(() => SoldProduct, (soldProduct) => soldProduct.product)
   soldProducts: SoldProduct[];
+
+  @OneToMany(() => DamagedProduct, (damagedProduct) => damagedProduct.product)
+  damagedProducts: DamagedProduct[];
 }

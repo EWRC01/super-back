@@ -2,6 +2,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
 import { Product } from '../../products/entities/product.entity';
 import { Provider } from 'src/providers/entities/provider.entity';
+import { DamagedProduct } from 'src/damaged-products/entities/damaged-product.entity';
 
 @Entity('brands')
 export class Brand {
@@ -20,4 +21,7 @@ export class Brand {
 
   @OneToMany(() => Product, (product) => product.brand)
   products: Product[];
+
+  @OneToMany(() => DamagedProduct, (damagedProduct) => damagedProduct.brand)
+  damagedProducts: DamagedProduct[];
 }

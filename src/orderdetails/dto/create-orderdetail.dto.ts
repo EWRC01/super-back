@@ -61,11 +61,6 @@ class CreateOrderDetailProductDto {
   @IsPositive()
   quantity: number;
 
-  @ApiPropertyOptional({ example: 0, description: 'Stock reservado' })
-  @IsOptional()
-  @IsInt()
-  reservedStock?: number;
-
   @ApiPropertyOptional({ example: true, description: 'Venta al por mayor' })
   @IsOptional()
   @IsBoolean()

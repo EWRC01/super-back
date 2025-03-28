@@ -70,7 +70,6 @@ export class OrderDetailsService {
           salePrice: productData.salePrice,
           touristPrice: productData.touristPrice,
           stock: productData.quantity,  // Stock inicial = cantidad del pedido
-          reservedStock: productData.reservedStock ?? 0,
           wholesaleSale: productData.wholesaleSale ?? false,
           wholesalePrice: productData.wholesalePrice ?? null,
           wholesaleQuantity: productData.wholesaleQuantity ?? null,
