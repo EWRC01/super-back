@@ -145,7 +145,7 @@ export class PrintService {
     return InvoiceHTMLTemplate.generate(data);
   }
 
-   async generateThermalPdf(saleId: number): Promise<Buffer> {
+  async generateThermalPdf(saleId: number): Promise<Buffer> {
     const sale = await this.salesRepository
       .createQueryBuilder('sale')
       .leftJoinAndSelect('sale.customer', 'customer')
@@ -154,17 +154,17 @@ export class PrintService {
       .leftJoinAndSelect('soldProduct.product', 'product')
       .where('sale.id = :saleId', { saleId })
       .getOne();
-  
+
     if (!sale) {
       this.logger.error(`Venta con ID ${saleId} no encontrada`);
       throw new Error('Venta no encontrada');
     }
-  
+
     const invoiceData = this.mapToInvoiceData(sale);
     invoiceData.config.qrImage = await this.generateQRCode(invoiceData.sale);
     
     const htmlContent = ThermalInvoiceTemplate.generate(invoiceData);
-  
+
     const browser = await puppeteer.launch({
       headless: true,
       args: [
@@ -173,34 +173,55 @@ export class PrintService {
         '--disable-dev-shm-usage'
       ]
     });
-  
+
     try {
       const page = await browser.newPage();
       
-      // Configuración específica para formato térmico
+      // Configurar el viewport para coincidir con el ancho térmico
+      await page.setViewport({ width: 800, height: 600 });
+      
       await page.setContent(htmlContent, {
         waitUntil: 'networkidle0',
         timeout: 60000
       });
-  
+
+      // Calcular la altura completa del documento incluyendo footer
+      const fullHeight = await page.evaluate(() => {
+        const body = document.body;
+        const html = document.documentElement;
+        const footer = document.querySelector('.footer') || body;
+        
+        return Math.max(
+          body.scrollHeight,
+          body.offsetHeight,
+          html.clientHeight,
+          html.scrollHeight,
+          html.offsetHeight,
+          footer.getBoundingClientRect().bottom
+        );
+      });
+
+      // Convertir pixeles a milímetros (1mm ≈ 3.78px)
+      const heightInMM = Math.ceil(fullHeight / 3.78) + 5; // Margen adicional
+
       const pdfBuffer = await page.pdf({
-        width: '80mm',          // Ancho exacto para 80mm
-        height: '210mm',         // Altura automática según contenido
-        printBackground: true,  // Necesario para bordes/QR
-        scale: 0.75,            // Reduce escala para mejor ajuste
+        width: '80mm',          // Ancho fijo para impresora térmica
+        height: `${heightInMM}mm`, // Altura calculada dinámicamente
+        printBackground: true,
         margin: {
-          top: '5mm',
+          top: '2mm',
           right: '2mm',
-          bottom: '5mm',
+          bottom: '5mm', // Margen mayor en la parte inferior
           left: '2mm'
         },
-        pageRanges: '1'         // Fuerza una sola página
+        pageRanges: '1'
       });
-  
+
       return Buffer.from(pdfBuffer);
     } finally {
       await browser.close();
     }
   }
+
    
 }
