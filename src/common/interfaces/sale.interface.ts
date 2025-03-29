@@ -5,6 +5,7 @@ export interface SaleInvoiceData {
       user: string;
       cashregister: number;
       totalWithIVA: number;
+      totalDiscounts?: number;
       totalIVA?: number;
       paid: number;
       customer?: {
@@ -13,6 +14,7 @@ export interface SaleInvoiceData {
       products: Array<{
         quantity: number;
         price: number;
+        discountAmount: number;
         product: {
           name: string;
         };

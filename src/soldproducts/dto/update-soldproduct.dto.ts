@@ -1,8 +1,30 @@
-// src/sold-products/dto/update-sold-product.dto.ts
-import { IsOptional, IsDecimal, IsInt, IsEnum, IsNotEmpty, IsString } from 'class-validator';
+import { IsOptional, IsDecimal, IsInt, IsEnum, IsNotEmpty, IsString, IsArray, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { PriceType } from 'src/common/enums/price-type.enum';
 import { OperationType } from 'src/common/enums/operation-type.enum';
+
+class UpdateAppliedDiscountDto {
+  @ApiProperty({
+    description: 'ID del descuento a aplicar',
+    example: 1,
+    type: Number,
+    required: false,
+  })
+  @IsOptional()
+  @IsInt()
+  discountId?: number;
+
+  @ApiProperty({
+    description: 'Cantidad a la que aplica el descuento',
+    example: 2,
+    type: Number,
+    required: false,
+  })
+  @IsOptional()
+  @IsInt()
+  quantity?: number;
+}
 
 export class UpdateSoldProductDto {
   @ApiProperty({
@@ -31,6 +53,8 @@ export class UpdateSoldProductDto {
     type: Number,
     required: false,
   })
+  @IsOptional()
+  @IsInt()
   saleId?: number;
 
   @ApiProperty({
@@ -44,23 +68,16 @@ export class UpdateSoldProductDto {
   productId?: number;
 
   @ApiProperty({
-      description: 'Tipo de precio',
-      example: 'sale',
-      enum: PriceType,
-    })
-    @IsNotEmpty()
-    @IsString()
-    priceType?: string;
-
-  @ApiProperty({
-    description: 'ID de referencia (opcional)',
-    example: 456,
-    type: Number,
+    description: 'Tipo de precio (opcional)',
+    example: 'sale',
+    enum: PriceType,
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  referenceId?: number;
+  @IsEnum(PriceType, {
+    message: 'El tipo de precio debe ser uno de: sale, wholesale, tourist',
+  })
+  priceType?: PriceType;
 
   @ApiProperty({
     description: 'Tipo de operación (opcional)',
@@ -72,5 +89,16 @@ export class UpdateSoldProductDto {
   @IsEnum(OperationType, {
     message: 'El tipo debe ser uno de: holding, account, sale, quotation',
   })
-  type?: string;
+  type?: OperationType;
+
+  @ApiProperty({
+    description: 'Descuentos a aplicar (opcional)',
+    type: [UpdateAppliedDiscountDto],
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => UpdateAppliedDiscountDto)
+  appliedDiscounts?: UpdateAppliedDiscountDto[];
 }

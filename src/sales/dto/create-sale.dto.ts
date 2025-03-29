@@ -1,8 +1,27 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsNotEmpty, IsDate, IsPositive, IsArray, ValidateNested, IsEnum } from 'class-validator';
+import { IsNumber, IsNotEmpty, IsDate, IsPositive, IsArray, ValidateNested, IsEnum, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
 import { PriceType } from 'src/common/enums/price-type.enum';
 
+class AppliedDiscountDto {
+  @ApiProperty({ 
+    example: 1, 
+    description: 'ID del descuento a aplicar' 
+  })
+  @IsNumber()
+  @IsPositive()
+  discountId: number;
+
+  @ApiProperty({ 
+    example: 2, 
+    description: 'Cantidad de productos a los que aplicar el descuento (opcional)', 
+    required: false 
+  })
+  @IsOptional()
+  @IsNumber()
+  @IsPositive()
+  quantity?: number;
+}
 
 class SoldProductDto {
   @ApiProperty({ example: 1, description: 'ID del producto vendido' })
@@ -25,6 +44,17 @@ class SoldProductDto {
     message: 'El tipo de precio debe ser uno de: sale, wholesale, tourist',
   })
   priceType: PriceType;
+
+  @ApiProperty({
+    type: [AppliedDiscountDto],
+    description: 'Descuentos aplicados a este producto',
+    required: false
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => AppliedDiscountDto)
+  appliedDiscounts?: AppliedDiscountDto[];
 }
 
 export class CreateSaleDto {

@@ -22,6 +22,9 @@ export class Sale {
 
   @Column({ type: 'decimal', precision: 9, scale: 2, nullable: false })
   paid: number;
+  
+  @Column({ type: 'decimal', precision: 9, scale: 2 })
+  totalDiscount: number; // <-- Nuevo campo
 
   @ManyToOne(() => Customer, (customer) => customer.sales, {onDelete: 'CASCADE'})
   @JoinColumn({ name: 'customerId' })

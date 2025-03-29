@@ -20,6 +20,7 @@ import { OrdersModule } from './orders/orders.module';
 import { OrderdetailsModule } from './orderdetails/orderdetails.module';
 import { PrintModule } from './print/print.module';
 import { DamagedProductsModule } from './damaged-products/damaged-products.module';
+import { DiscountsModule } from './discounts/discounts.module';
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -52,7 +53,7 @@ import { DamagedProductsModule } from './damaged-products/damaged-products.modul
     ConfigurationModule, 
     QuotationProductsModule, 
     CashRegisterModule, 
-    TaxModule, EmployeesModule, EmployeePaymentsModule, ProvidersModule, OrdersModule, OrderdetailsModule, PrintModule, DamagedProductsModule
+    TaxModule, EmployeesModule, EmployeePaymentsModule, ProvidersModule, OrdersModule, OrderdetailsModule, PrintModule, DamagedProductsModule, DiscountsModule
   ],
   controllers: [],
   providers: [],

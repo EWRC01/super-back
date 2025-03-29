@@ -9,6 +9,9 @@ import { User } from 'src/users/entities/user.entity';
 import { Customer } from 'src/customers/entities/customer.entity';
 import { PriceType } from '../common/enums/price-type.enum';
 import * as moment from 'moment-timezone';
+import { DiscountType } from 'src/common/enums/discount-type.enum';
+import { Discount } from 'src/discounts/entities/discount.entity';
+import { AppliedDiscount } from 'src/discounts/entities/applied-discount.entity';
 
 @Injectable()
 export class SalesService {
@@ -23,118 +26,249 @@ export class SalesService {
     private userRepository: Repository<User>,
     @InjectRepository(Customer)
     private customerRepository: Repository<Customer>,
+    @InjectRepository(Discount)
+    private discountRepository: Repository<Discount>,
+    @InjectRepository(AppliedDiscount)
+    private appliedDiscountRepository: Repository<AppliedDiscount>,
   ) {}
 
+
   async create(createSaleDto: CreateSaleDto): Promise<any> {
-    // Verificar si el usuario existe
-    const user = await this.userRepository.findOne({ where: { id: createSaleDto.userId } });
-    if (!user) {
-      throw new NotFoundException(`User with ID: ${createSaleDto.userId} not found!`);
-    }
-  
-    // Verificar si el cliente existe
-    const customer = await this.customerRepository.findOne({ where: { id: createSaleDto.customerId } });
-    if (!customer) {
-      throw new NotFoundException(`Customer with ID: ${createSaleDto.customerId} not found!`);
-    }
-  
-    let totalWithIVA = 0;
-    let totalWithoutIVA = 0;
-    let totalIVA = 0;
-  
-    // Lista para registrar los productos vendidos
-    const soldProducts = [];
-  
-    // Procesar cada producto en la venta
-    for (const product of createSaleDto.products) {
-      const productExists = await this.productsRepository.findOne({ where: { id: product.productId } });
-      if (!productExists) {
-        throw new NotFoundException(`Product with ID ${product.productId} not found`);
+      // Verificar si el usuario existe
+      const user = await this.userRepository.findOne({ 
+        where: { id: createSaleDto.userId } 
+      });
+      if (!user) {
+        throw new NotFoundException(`User with ID: ${createSaleDto.userId} not found!`);
       }
   
-      // Seleccionar el precio según el tipo
-      let price: number;
-      switch (product.priceType) {
-        case PriceType.SALE:
-          price = productExists.salePrice;
-          break;
-        case PriceType.WHOLESALE:
-          price = productExists.wholesalePrice;
-          break;
-        case PriceType.TOURIST:
-          price = productExists.touristPrice;
-          break;
-        default:
-          throw new BadRequestException(`Tipo de precio no válido: ${product.priceType}`);
+      // Verificar si el cliente existe
+      const customer = await this.customerRepository.findOne({ 
+        where: { id: createSaleDto.customerId },
+      });
+      if (!customer) {
+        throw new NotFoundException(`Customer with ID: ${createSaleDto.customerId} not found!`);
       }
   
-      // Calcular IVA y total sin IVA
-      const priceWithouthIVA = price / 1.13; // Asumiendo 13% de IVA
-      const iva = price - priceWithouthIVA;
+      // Configurar zona horaria
+      const timezone = 'America/El_Salvador';
+      const now = moment().tz(timezone);
   
-      // Actualizar totales generales
-      totalWithIVA += price * product.quantity;
-      totalWithoutIVA += priceWithouthIVA * product.quantity;
-      totalIVA += iva * product.quantity;
+      let totalWithIVA = 0;
+      let totalWithoutIVA = 0;
+      let totalIVA = 0;
+      let totalDiscount = 0;
   
-      // Registrar el producto vendido
-      const soldProduct = this.soldProductsRepository.create({
-        quantity: product.quantity,
-        price, // Precio con IVA
-        priceWithouthIVA, // Precio sin IVA
-        iva: iva, // IVA aplicado
-        productId: product.productId,
-        saleId: null, // Se asignará después de guardar la venta
-        type: 'sale',
+      // Crear la venta primero para obtener el ID
+      const sale = this.salesRepository.create({
+        date: createSaleDto.date,
+        paid: createSaleDto.paid,
+        customer,
+        user,
+        totalWithIVA: 0,
+        totalWithoutIVA: 0,
+        totalIVA: 0,
+        totalDiscount: 0
       });
   
-      soldProducts.push(soldProduct);
+      const savedSale = await this.salesRepository.save(sale);
+  
+      // Procesar cada producto en la venta
+      for (const product of createSaleDto.products) {
+        const productExists = await this.productsRepository.findOne({ 
+          where: { id: product.productId }
+        });
+        
+        if (!productExists) {
+          throw new NotFoundException(`Product with ID ${product.productId} not found`);
+        }
+  
+        // Calcular precio base según tipo
+        const unitPrice = this.getPriceByType(productExists, product.priceType);
+        const originalPrice = unitPrice * product.quantity;
+        
+        // Aplicar descuentos si existen
+        let finalPrice = originalPrice;
+        let itemDiscount = 0;
+  
+        if (product.appliedDiscounts && product.appliedDiscounts.length > 0) {
+          for (const discountInfo of product.appliedDiscounts) {
+            const discount = await this.discountRepository.findOne({
+              where: { id: discountInfo.discountId }
+            });
+            
+            if (discount) {
+              // Convertir IDs a números para comparación
+              const discountProductId = Number(discount.productId);
+              const currentProductId = Number(product.productId);
+  
+              // Validar que el descuento sea aplicable a este producto
+              if (discount.productId != null && discountProductId !== currentProductId) {
+                throw new BadRequestException(
+                  `El descuento ${discount.name} (ID: ${discount.id}) ` +
+                  `no es aplicable al producto ${productExists.name} (ID: ${product.productId})`
+                );
+              }
+  
+              // Validar cantidad mínima si aplica
+              if (discount.minQuantity && product.quantity < discount.minQuantity) {
+                throw new BadRequestException(
+                  `Se requiere una cantidad mínima de ${discount.minQuantity} ` +
+                  `para aplicar el descuento ${discount.name}`
+                );
+              }
+  
+              // Validar fechas de vigencia con moment-timezone
+              if (discount.startDate) {
+                const startDate = moment(discount.startDate).tz(timezone);
+                if (startDate.isAfter(now)) {
+                  throw new BadRequestException(
+                    `El descuento ${discount.name} estará vigente a partir del ${startDate.format('DD/MM/YYYY')}`
+                  );
+                }
+              }
+  
+              if (discount.endDate) {
+                const endDate = moment(discount.endDate).tz(timezone);
+                if (endDate.isBefore(now)) {
+                  throw new BadRequestException(
+                    `El descuento ${discount.name} expiró el ${endDate.format('DD/MM/YYYY')}`
+                  );
+                }
+              }
+  
+              // Validar si el descuento está activo
+              if (discount.isActive === false) {
+                throw new BadRequestException(
+                  `El descuento ${discount.name} no está activo actualmente`
+                );
+              }
+  
+              const discountQty = discountInfo.quantity || product.quantity;
+              itemDiscount += this.calculateDiscountAmount(
+                discount, 
+                unitPrice, 
+                discountQty
+              );
+            } else {
+              throw new NotFoundException(`Discount with ID ${discountInfo.discountId} not found`);
+            }
+          }
+          finalPrice = originalPrice - itemDiscount;
+        }
+  
+        // Calcular IVA sobre el precio final con descuento
+        const priceWithouthIVA = finalPrice / 1.13;
+        const iva = finalPrice - priceWithouthIVA;
+  
+        // Registrar el producto vendido
+        const soldProduct = await this.soldProductsRepository.save({
+          quantity: product.quantity,
+          price: finalPrice,
+          originalPrice,
+          discountAmount: itemDiscount,
+          priceWithouthIVA,
+          iva,
+          productId: product.productId,
+          saleId: savedSale.id,
+          type: 'sale',
+          priceType: product.priceType,
+          createdAt: now.toDate(),
+        });
+  
+        // Registrar descuentos aplicados si existen
+        if (product.appliedDiscounts && product.appliedDiscounts.length > 0) {
+          await Promise.all(
+            product.appliedDiscounts.map(async (d) => {
+              const discount = await this.discountRepository.findOne({ 
+                where: { id: d.discountId } 
+              });
+              if (discount) {
+                return this.appliedDiscountRepository.save({
+                  amount: this.calculateDiscountAmount(
+                    discount,
+                    unitPrice,
+                    d.quantity || product.quantity
+                  ),
+                  discountId: d.discountId,
+                  soldProductId: soldProduct.id,
+                  appliedAt: now.toDate(),
+                });
+              }
+            })
+          );
+        }
+  
+        // Actualizar totales
+        totalWithIVA += finalPrice;
+        totalWithoutIVA += priceWithouthIVA;
+        totalIVA += iva;
+        totalDiscount += itemDiscount;
+  
+        // Actualizar stock
+        await this.productsRepository.decrement(
+          { id: product.productId },
+          'stock',
+          product.quantity
+        );
+      }
+  
+      // Validar que el monto pagado sea suficiente
+      if (createSaleDto.paid < totalWithIVA) {
+        throw new BadRequestException('El monto pagado es insuficiente.');
+      }
+  
+      // Actualizar la venta con los totales reales
+      await this.salesRepository.update(savedSale.id, {
+        totalWithIVA,
+        totalWithoutIVA,
+        totalIVA,
+        totalDiscount,
+      });
+  
+      // Calcular el cambio
+      const change = createSaleDto.paid - totalWithIVA;
+  
+      return {
+        ...await this.salesRepository.findOne({ where: { id: savedSale.id } }),
+        paid: createSaleDto.paid,
+        change,
+        date: now.format('YYYY-MM-DD HH:mm:ss'),
+        timezone,
+      };
     }
-  
-    // Validar que el monto pagado sea suficiente
-    if (createSaleDto.paid < totalWithIVA) {
-      throw new BadRequestException('El monto pagado es insuficiente.');
+
+private getPriceByType(product: Product, priceType: PriceType): number {
+    switch (priceType) {
+      case PriceType.SALE: return product.salePrice;
+      case PriceType.WHOLESALE: return product.wholesalePrice;
+      case PriceType.TOURIST: return product.touristPrice;
+      default: throw new BadRequestException(`Tipo de precio no válido: ${priceType}`);
     }
-  
-    // Crear la venta con el total calculado
-    const sale = this.salesRepository.create({
-      ...createSaleDto,
-      user,
-      customer,
-      totalWithIVA,
-      totalWithoutIVA,
-      totalIVA,
-    });
-  
-    const savedSale = await this.salesRepository.save(sale);
-  
-    // Guardar los productos vendidos con la venta asociada
-    for (const soldProduct of soldProducts) {
-      soldProduct.saleId = savedSale.id;
-      await this.soldProductsRepository.save(soldProduct);
-  
-      // Actualizar el stock del producto
-      await this.productsRepository.decrement(
-        { id: soldProduct.productId },
-        'stock',
-        soldProduct.quantity,
-      );
+}
+
+private calculateDiscountAmount(discount: Discount, unitPrice: number, quantity: number): number {
+    if (!discount) return 0;
+    
+    switch(discount.type) {
+      case 'PERCENTAGE':
+        return (unitPrice * quantity) * (discount.value / 100);
+      case 'FIXED_AMOUNT':
+        return Math.min(discount.value * quantity, unitPrice * quantity);
+      case 'BUY_X_GET_Y':
+        const freeItems = Math.floor(quantity / discount.minQuantity) * discount.value;
+        return freeItems * unitPrice;
+      case 'BUNDLE':
+        const bundleSize = discount.minQuantity || 1;
+        const bundlePrice = discount.value || unitPrice;
+        const bundles = Math.floor(quantity / bundleSize);
+        const remainder = quantity % bundleSize;
+        return (unitPrice * quantity) - ((bundles * bundlePrice) + (remainder * unitPrice));
+      default:
+        return 0;
     }
-  
-    // Calcular el cambio
-    const change = createSaleDto.paid - totalWithIVA;
-  
-    // Retornar una respuesta más completa
-    return {
-      ...savedSale,
-      totalWithIVA,
-      totalWithoutIVA,
-      totalIVA,
-      paid: createSaleDto.paid,
-      change,
-    };
-  }
-  
+}
+
 
   async findAll(startDate: string, endDate: string): Promise<Sale[]> {
 

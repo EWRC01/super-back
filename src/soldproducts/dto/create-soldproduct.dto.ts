@@ -1,8 +1,29 @@
-import { IsArray, ValidateNested, IsNotEmpty, IsDecimal, IsInt, IsEnum } from 'class-validator';
+import { IsArray, ValidateNested, IsNotEmpty, IsDecimal, IsInt, IsEnum, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
-import { PriceType } from 'src/common/enums/price-type.enum';// Importa el enum desde CreateSaleDto
+import { PriceType } from 'src/common/enums/price-type.enum';
 import { OperationType } from 'src/common/enums/operation-type.enum';
+
+class AppliedDiscountDto {
+  @ApiProperty({
+    description: 'ID del descuento a aplicar',
+    example: 1,
+    type: Number,
+  })
+  @IsNotEmpty()
+  @IsInt()
+  discountId: number;
+
+  @ApiProperty({
+    description: 'Cantidad a la que aplica el descuento (opcional)',
+    example: 2,
+    type: Number,
+    required: false,
+  })
+  @IsOptional()
+  @IsInt()
+  quantity?: number;
+}
 
 class CreateSoldProductDto {
   @ApiProperty({
@@ -44,15 +65,6 @@ class CreateSoldProductDto {
   priceType: PriceType;
 
   @ApiProperty({
-    description: 'ID de referencia (puede ser el ID de una venta, pedido, etc.)',
-    example: 123,
-    type: Number,
-  })
-  @IsNotEmpty()
-  @IsInt()
-  referenceId: number;
-
-  @ApiProperty({
     description: 'Tipo de operación (holding, account, sale, quotation)',
     example: 'sale',
     enum: OperationType,
@@ -62,6 +74,17 @@ class CreateSoldProductDto {
     message: 'El tipo debe ser uno de: holding, account, sale, quotation',
   })
   type: string;
+
+  @ApiProperty({
+    description: 'Descuentos a aplicar (opcional)',
+    type: [AppliedDiscountDto],
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => AppliedDiscountDto)
+  appliedDiscounts?: AppliedDiscountDto[];
 }
 
 export class CreateSoldProductsDto {

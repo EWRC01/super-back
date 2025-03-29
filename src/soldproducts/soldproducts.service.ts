@@ -9,6 +9,9 @@ import { SoldProduct } from './entities/soldproduct.entity';
 import { CreateSoldProductsDto } from './dto/create-soldproduct.dto';
 import { PriceType } from 'src/common/enums/price-type.enum';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { Discount } from 'src/discounts/entities/discount.entity';
+import { DiscountType } from 'src/common/enums/discount-type.enum';
+import { AppliedDiscount } from 'src/discounts/entities/applied-discount.entity';
 
 @Injectable()
 export class SoldProductsService {
@@ -21,6 +24,10 @@ export class SoldProductsService {
     private readonly brandRepository: Repository<Brand>,
     @InjectRepository(Category)
     private readonly categoryRepository: Repository<Category>,
+    @InjectRepository(Discount)
+    private readonly discountRepository: Repository<Discount>,
+    @InjectRepository(AppliedDiscount)
+    private readonly appliedDiscountRepository: Repository<AppliedDiscount>,
   ) {}
 
   // 0. Obtener todos los productos vendidos
@@ -66,56 +73,187 @@ export class SoldProductsService {
     return products;
   }
 
-  // 2. Registrar productos vendidos
-  async registerSoldProducts(createSoldProductsDto: CreateSoldProductsDto): Promise<number[]> {
-    const { products } = createSoldProductsDto;
-    const results = [];
 
-    for (const product of products) {
-      // Verificar si el producto existe
-      const existingProduct = await this.productRepository.findOne({
-        where: { id: product.productId },
-      });
+// 2. Registrar productos vendidos con descuentos opcionales
+async registerSoldProducts(createSoldProductsDto: CreateSoldProductsDto): Promise<number[]> {
+  const { products } = createSoldProductsDto;
+  const results = [];
 
-      if (!existingProduct) {
-        throw new NotFoundException(
-          `El producto con ID ${product.productId} no existe.`,
-        );
-      }
+  for (const product of products) {
+    // Verificar si el producto existe
+    const existingProduct = await this.productRepository.findOne({
+      where: { id: product.productId },
+    });
 
-      // Calcular el precio según el tipo de precio (priceType)
-      let price: number;
-      switch (product.priceType) {
-        case PriceType.SALE:
-          price = existingProduct.salePrice;
-          break;
-        case PriceType.WHOLESALE:
-          price = existingProduct.wholesalePrice;
-          break;
-        case PriceType.TOURIST:
-          price = existingProduct.touristPrice;
-          break;
-        default:
-          throw new NotFoundException(
-            `Tipo de precio no válido: ${product.priceType}`,
-          );
-      }
-
-      // Crear el registro de producto vendido
-      const soldProduct = this.soldProductRepository.create({
-        quantity: product.quantity,
-        price, // Usar el precio calculado
-        productId: product.productId,
-        saleId: product.referenceId,
-        type: product.type,
-        priceType: product.priceType, // Incluir el tipo de precio
-      });
-
-      await this.soldProductRepository.save(soldProduct);
-      results.push(1); // Indicar que el producto se registró correctamente
+    if (!existingProduct) {
+      throw new NotFoundException(
+        `El producto con ID ${product.productId} no existe.`,
+      );
     }
 
-    return results;
+    // Calcular el precio según el tipo de precio (priceType)
+    const unitPrice = this.getPriceByType(existingProduct, product.priceType);
+    const originalPrice = unitPrice * product.quantity;
+    
+    // Inicializar valores para descuentos
+    let finalPrice = originalPrice;
+    let totalDiscount = 0;
+    let discountDescription = null;
+    const appliedDiscounts = [];
+
+    // Aplicar descuentos si fueron especificados
+    if (product.appliedDiscounts && product.appliedDiscounts.length > 0) {
+      const discountResults = [];
+      
+      for (const appliedDiscount of product.appliedDiscounts) {
+        // Verificar que el descuento existe
+        const discount = await this.discountRepository.findOne({
+          where: { id: appliedDiscount.discountId }
+        });
+
+        if (!discount) {
+          throw new NotFoundException(
+            `El descuento con ID ${appliedDiscount.discountId} no existe.`,
+          );
+        }
+
+        // Calcular cantidad a la que aplica el descuento
+        const discountQuantity = appliedDiscount.quantity || product.quantity;
+        
+        // Calcular el descuento
+        const discountResult = this.calculateDiscount(
+          discount,
+          discountQuantity,
+          unitPrice
+        );
+
+        totalDiscount += discountResult.discountAmount;
+        discountResults.push(discountResult.discountDescription);
+
+        // Guardar referencia para crear appliedDiscounts después
+        appliedDiscounts.push({
+          discountId: discount.id,
+          amount: discountResult.discountAmount
+        });
+      }
+
+      finalPrice = originalPrice - totalDiscount;
+      discountDescription = discountResults.join(' + ');
+    }
+
+    // Crear el registro de producto vendido
+    const soldProduct = this.soldProductRepository.create({
+      quantity: product.quantity,
+      price: finalPrice,
+      originalPrice,
+      discountAmount: totalDiscount,
+      discountDescription,
+      productId: product.productId,
+      saleId: product.saleId, // <-- Usamos solo saleId aquí
+      type: product.type,
+      priceType: product.priceType,
+      priceWithouthIVA: finalPrice / 1.13,
+      iva: finalPrice - (finalPrice / 1.13),
+    });
+
+    const savedSoldProduct = await this.soldProductRepository.save(soldProduct);
+
+    // Registrar los descuentos aplicados
+    if (appliedDiscounts.length > 0) {
+      await Promise.all(
+        appliedDiscounts.map(ad => 
+          this.appliedDiscountRepository.save({
+            amount: ad.amount,
+            discountId: ad.discountId,
+            soldProductId: savedSoldProduct.id
+          })
+        )
+      );
+    }
+
+    results.push(1);
+  }
+
+  return results;
+}
+
+  private getPriceByType(product: Product, priceType: PriceType): number {
+    switch (priceType) {
+      case PriceType.SALE:
+        return product.salePrice;
+      case PriceType.WHOLESALE:
+        return product.wholesalePrice;
+      case PriceType.TOURIST:
+        return product.touristPrice;
+      default:
+        throw new NotFoundException(`Tipo de precio no válido: ${priceType}`);
+    }
+  }
+
+  private calculateDiscount(
+    discount: Discount,
+    quantity: number,
+    unitPrice: number
+  ): {
+    finalPrice: number;
+    discountAmount: number;
+    discountDescription: string;
+  } {
+    const totalOriginalPrice = unitPrice * quantity;
+    let finalPrice = totalOriginalPrice;
+    let discountAmount = 0;
+    let description = discount.name;
+  
+    switch (discount.type) {
+      case DiscountType.PERCENTAGE:
+        discountAmount = totalOriginalPrice * (discount.value / 100);
+        finalPrice = totalOriginalPrice - discountAmount;
+        description = `${discount.value}% de descuento`;
+        break;
+  
+      case DiscountType.FIXED_AMOUNT:
+        discountAmount = Math.min(discount.value * quantity, totalOriginalPrice);
+        finalPrice = totalOriginalPrice - discountAmount;
+        description = `$${discount.value} de descuento por unidad`;
+        break;
+  
+      case DiscountType.BUY_X_GET_Y:
+        const x = discount.minQuantity || 2;
+        const y = discount.value || 1;
+        const paidQuantity = quantity - Math.floor(quantity / x) * y;
+        discountAmount = totalOriginalPrice - (paidQuantity * unitPrice);
+        finalPrice = paidQuantity * unitPrice;
+        description = `Promo ${x}x${y}`;
+        break;
+  
+      case DiscountType.BUNDLE:
+        const bundleSize = discount.minQuantity || 1;
+        const bundlePrice = discount.value || unitPrice;
+        const bundles = Math.floor(quantity / bundleSize);
+        const remainder = quantity % bundleSize;
+        discountAmount = totalOriginalPrice - ((bundles * bundlePrice) + (remainder * unitPrice));
+        finalPrice = (bundles * bundlePrice) + (remainder * unitPrice);
+        description = `${bundleSize} por $${bundlePrice}`;
+        break;
+  
+      case DiscountType.SEASONAL:
+        // Implementación para descuentos estacionales
+        discountAmount = totalOriginalPrice * 0.1; // Ejemplo: 10% de descuento estacional
+        finalPrice = totalOriginalPrice - discountAmount;
+        description = `Oferta estacional: ${discount.name}`;
+        break;
+  
+      default:
+        discountAmount = 0;
+        finalPrice = totalOriginalPrice;
+        description = 'Descuento aplicado';
+    }
+  
+    return {
+      finalPrice,
+      discountAmount,
+      discountDescription: description
+    };
   }
 
   // 3. Obtener productos más vendidos

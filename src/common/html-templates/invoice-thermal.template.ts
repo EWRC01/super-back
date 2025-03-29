@@ -7,7 +7,7 @@ export class ThermalInvoiceTemplate {
         @page { margin: 0; padding: 0; size: 80mm auto; }
         body { 
           font-family: 'Courier New', monospace;
-          font-size: 10px;
+          font-size: 20px;
           width: 76mm !important;
           margin: 2mm auto !important;
           line-height: 1.2;
@@ -21,7 +21,8 @@ export class ThermalInvoiceTemplate {
         .items-table td:nth-child(3),
         .items-table td:nth-child(4) { width: 20%; text-align: right }
         .bold { font-weight: bold; }
-        .qr-container { text-align: center; margin-top: 5px; }
+        .qr-container { text-align: center; margin-top: 5px; width: 100%; max-width: 76 mm; }
+        .footer { text-align: center; margin-top: 8px;}
       </style>
     `;
   
@@ -85,14 +86,31 @@ export class ThermalInvoiceTemplate {
             <td class="right"><strong>P.Unit</strong></td>
             <td class="right"><strong>Total</strong></td>
           </tr>
-          ${data.sale.products.map(product => `
-            <tr>
-              <td>${product.quantity}</td>
-              <td>${product.product.name}</td>
-              <td class="right">$${product.price.toFixed(2)}</td>
-              <td class="right">$${(product.price * product.quantity).toFixed(2)}</td>
-            </tr>
-          `).join('')}
+          ${data.sale.products.map(product => {
+            // Calcular precio unitario con descuento
+            const unitPriceWithDiscount = product.discountAmount > 0 
+              ? (product.price - (product.discountAmount / product.quantity))
+              : product.price;
+
+            const unitPrice = (product.price/product.quantity)
+              
+            return `
+              <tr>
+                <td>${product.quantity}</td>
+                <td>${product.product.name}</td>
+                <td class="right">$${unitPrice.toFixed(2)}</td>
+                <td class="right">$${(unitPrice * product.quantity).toFixed(2)}</td>
+              </tr>
+              ${product.discountAmount > 0 ? `
+              <tr class="discount-row">
+                <td></td>
+                <td>↳ Descuento Aplicado</td>
+                <td class="right">-${(product.discountAmount / product.quantity).toFixed(2)}</td>
+                <td class="right">-${product.discountAmount.toFixed(2)}</td>
+              </tr>
+              `: ''}
+            `;
+          }).join('')}
         </table>
         <div class="divider"></div>
       `;
@@ -100,9 +118,11 @@ export class ThermalInvoiceTemplate {
   
     private static totalsSection(data: SaleInvoiceData): string {
       const change = data.sale.paid - data.sale.totalWithIVA;
+      const subTotal = data.sale.totalWithIVA + data.sale.totalDiscounts;
       return `
         <div>
-          <div>Subtotal: $${data.sale.totalWithIVA.toFixed(2)}</div>
+          <div>Subtotal: $${subTotal.toFixed(2)}</div>
+          <div>Dto. Total: $${data.sale.totalDiscounts.toFixed(2)}</div>
           <div>Total: $${data.sale.totalWithIVA.toFixed(2)}</div>
           <div>Recibido: $${data.sale.paid.toFixed(2)}</div>
           <div class="bold">Cambio: $${change.toFixed(2)}</div>
@@ -112,10 +132,25 @@ export class ThermalInvoiceTemplate {
     }
   
     private static paymentInfo(data: SaleInvoiceData): string {
+
+      // Dividir el string en multiples lineas
+       // Parsear el JSON y formatear en líneas
+  let qrLines = [];
+  try {
+    const qrData = JSON.parse(data.config.qrData);
+    qrLines = [
+      `Factura: ${qrData.saleId}`,
+      `Total: $${qrData.total.toFixed(2)}`,
+      `Fecha: ${new Date(qrData.date).toLocaleDateString('es-SV')}`
+    ];
+  } catch (e) {
+    // Si falla el parseo, mostrar el texto original dividido
+    qrLines = data.config.qrData.split(',').map(item => item.trim());
+  }
       return `
         <div class="qr-container">
-          <img src="${data.config.qrImage}" width="80" height="80">
-          <div>${data.config.qrData}</div>
+          <img src="${data.config.qrImage}" width="120" height="120">
+          <div>${qrLines.map(line => `<div>${line}</div>`).join('')}</div>
         </div>
       `;
     }

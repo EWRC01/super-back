@@ -1,7 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { Sale } from '../../sales/entities/sale.entity';
 import { Product } from '../../products/entities/product.entity';
 import { OperationType } from 'src/common/enums/operation-type.enum';
+import { AppliedDiscount } from 'src/discounts/entities/applied-discount.entity';
 
 @Entity('sold_products')
 export class SoldProduct {
@@ -12,7 +13,16 @@ export class SoldProduct {
   quantity: number;
 
   @Column({ type: 'decimal', precision: 8, scale: 2, nullable: false })
-  price: number;
+  price: number; // Precio FINAL (con descuentos aplicados) - Mantenemos este campo
+
+  @Column({ type: 'decimal', precision: 8, scale: 2, nullable: false })
+  originalPrice: number; // Nuevo: Precio SIN descuentos
+
+  @Column({ type: 'decimal', precision: 8, scale: 2, nullable: true, default: 0 })
+  discountAmount: number; // Monto total descontado
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  discountDescription: string; // Descripción del descuento aplicado
 
   @Column({ type: 'decimal', precision: 8, scale: 2, nullable: false })
   priceWithouthIVA: number;
@@ -39,4 +49,7 @@ export class SoldProduct {
   @ManyToOne(() => Product, (product) => product.soldProducts, {onDelete: 'CASCADE'})
   @JoinColumn({ name: 'productId' })
   product: Product;
+
+  @OneToMany(() => AppliedDiscount, applied => applied.soldProduct)
+  appliedDiscounts: AppliedDiscount[];
 }

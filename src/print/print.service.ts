@@ -15,9 +15,9 @@ import { ThermalInvoiceTemplate } from 'src/common/html-templates/invoice-therma
 export class PrintService {
   private readonly logger = new Logger(PrintService.name);
   private readonly companyConfig = {
-    name: 'SUPER LAS TUNAS',
+    name: 'SUPER CAMPOS',
     branch: 'FRENTE A LOMAS TURBAS',
-    address: 'SUCURSAL FRENTE A LOMAS CABAS',
+    address: 'SUCURSAL LAS TUNAS',
     nit: '0000-000000-000-0',
     nrc: '0000000',
   };
@@ -35,9 +35,11 @@ export class PrintService {
         user: sale.user?.name || 'Sistema',
         cashregister: 1,
         totalWithIVA: sale.totalWithIVA,
+        totalDiscounts: sale.totalDiscount,
         paid: sale.paid,
         customer: sale.customer ? { name: sale.customer.name } : undefined,
         products: sale.products.map((p) => ({
+          discountAmount: p.discountAmount,
           quantity: p.quantity,
           price: p.price,
           product: { name: p.product.name },
@@ -183,7 +185,7 @@ export class PrintService {
   
       const pdfBuffer = await page.pdf({
         width: '80mm',          // Ancho exacto para 80mm
-        height: '90mm',         // Altura automática según contenido
+        height: '210mm',         // Altura automática según contenido
         printBackground: true,  // Necesario para bordes/QR
         scale: 0.75,            // Reduce escala para mejor ajuste
         margin: {
