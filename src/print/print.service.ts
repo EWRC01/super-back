@@ -30,6 +30,7 @@ export class PrintService {
       nit: this.configService.get<string>('COMPANY_NIT'),
       nrc: this.configService.get<string>('COMPANY_NRC'),
       typeDoc: this.configService.get<string>('COMPANY_DOC_TYPE'),
+      cashRegister: this.configService.get<number>('ID_CASH_REGISTER')
     };
   }
 
@@ -39,7 +40,7 @@ export class PrintService {
         id: sale.id,
         date: sale.date,
         user: sale.user?.name || 'Sistema',
-        cashregister: 1,
+        cashregister: this.companyConfig.cashRegister,
         totalWithIVA: sale.totalWithIVA,
         totalDiscounts: sale.totalDiscount,
         paid: sale.paid,
