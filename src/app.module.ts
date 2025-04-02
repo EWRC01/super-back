@@ -28,6 +28,7 @@ import { DiscountsModule } from './discounts/discounts.module';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         type: 'mysql',
+        timezone: 'America/El_Salvador',
         host: configService.get('DB_HOST'),
         port: +configService.get('DB_PORT'),
         username: configService.get('DB_USERNAME'),

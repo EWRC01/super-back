@@ -22,6 +22,9 @@ export class CashRegister {
   @Column('decimal', { precision: 10, scale: 2 })
   discrepancy: number; // Diferencia entre cashInHand y expectedCash
 
+  @Column({ nullable: true })
+  previousCashRegisterId: number; // Id de caja cerrada recientemente
+
   @Column('enum', { enum: StateCashRegister,  nullable: true })
   state: string; // Estado del corte de caja (Abierto, Cerrado)
 
