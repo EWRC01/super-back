@@ -10,22 +10,28 @@ import { NumberToWords } from 'src/common/utils/number-to-word.util';
 import * as QRCode from 'qrcode';
 import { InvoiceHTMLTemplate } from 'src/common/html-templates/invoice.template';
 import { ThermalInvoiceTemplate } from 'src/common/html-templates/invoice-thermal.template';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class PrintService {
   private readonly logger = new Logger(PrintService.name);
-  private readonly companyConfig = {
-    name: 'SUPER CAMPOS',
-    branch: 'FRENTE A LOMAS TURBAS',
-    address: 'SUCURSAL LAS TUNAS',
-    nit: '0000-000000-000-0',
-    nrc: '0000000',
-  };
 
   constructor(
     @InjectRepository(Sale)
     private readonly salesRepository: Repository<Sale>,
+    private readonly configService: ConfigService, // Inyecta ConfigService
   ) {}
+
+  private get companyConfig() {
+    return {
+      name: this.configService.get<string>('COMPANY_NAME'),
+      branch: this.configService.get<string>('COMPANY_BRANCH'),
+      address: this.configService.get<string>('COMPANY_ADDRESS'),
+      nit: this.configService.get<string>('COMPANY_NIT'),
+      nrc: this.configService.get<string>('COMPANY_NRC'),
+      typeDoc: this.configService.get<string>('COMPANY_DOC_TYPE'),
+    };
+  }
 
   private mapToInvoiceData(sale: Sale): SaleInvoiceData {
     return {
@@ -48,11 +54,11 @@ export class PrintService {
       config: {
         company: this.companyConfig,
         qrData: JSON.stringify({
-            saleId: sale.id,
-            total: sale.totalWithIVA,
-            date: sale.date.toISOString()
+          saleId: sale.id,
+          total: sale.totalWithIVA,
+          date: sale.date.toISOString()
         }),
-        qrImage: '' // Se generara despues
+        qrImage: '' // Se generará después
       },
     };
   }

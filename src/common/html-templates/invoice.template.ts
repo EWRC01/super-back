@@ -6,32 +6,49 @@ import { NumberToWords } from "../utils/number-to-word.util";
 export class InvoiceHTMLTemplate {
     private static readonly styles = `
       <style>
-        body { font-family: Arial, sans-serif; }
-        .header { text-align: center; margin-bottom: 20px; }
+        body { 
+          font-family: Arial, sans-serif;
+          width: 210mm;
+          margin: 20px auto;
+          padding: 20px;
+          line-height: 1.5;
+        }
+        .header { text-align: center; margin-bottom: 15px; }
         .title { font-size: 24px; font-weight: bold; }
-        .company-info { margin: 10px 0; }
-        .details-table { 
+        .divider { border-top: 1px dashed #000; margin: 10px 0; }
+        .items-table { 
           width: 100%; 
-          border-collapse: collapse; 
-          margin: 20px 0; 
+          border-collapse: collapse;
+          margin: 10px 0;
         }
-        .details-table th, 
-        .details-table td { 
-          border: 1px solid #ddd; 
-          padding: 8px; 
+        .items-table th, 
+        .items-table td { 
+          padding: 5px;
+          vertical-align: top;
         }
-        .totals-section { 
-          margin-top: 20px; 
-          float: right; 
-          width: 300px; 
+        .items-table th {
+          text-align: left;
+          border-bottom: 1px solid #000;
         }
-        .qr-code { 
+        .items-table td:nth-child(1) { width: 10% }
+        .items-table td:nth-child(2) { width: 50% }
+        .items-table td:nth-child(3),
+        .items-table td:nth-child(4) { width: 20%; text-align: right }
+        .bold { font-weight: bold; }
+        .qr-container { 
           text-align: center; 
-          margin-top: 30px; 
+          margin-top: 15px;
+          width: 100%;
         }
-        .client-info {
-          margin-bottom: 15px;
-          line-height: 1.6;
+        .footer { text-align: center; margin-top: 15px; }
+        .totals-section { 
+          margin-top: 10px;
+          float: right;
+          width: 300px;
+        }
+        .discount-row td {
+          font-size: 0.9em;
+          color: #666;
         }
       </style>
     `;
@@ -39,15 +56,15 @@ export class InvoiceHTMLTemplate {
     static generate(data: SaleInvoiceData): string {
       return `
         <html>
-          <head>
-            ${this.styles}
-          </head>
+          <head>${this.styles}</head>
           <body>
             ${this.header(data)}
-            ${this.clientInfo(data)}
-            ${this.productsTable(data)}
+            ${this.businessInfo(data)}
+            ${this.saleDetails(data)}
+            ${this.itemsTable(data)}
             ${this.totalsSection(data)}
-            ${this.qrSection(data)}
+            ${this.paymentInfo(data)}
+            ${this.footer()}
           </body>
         </html>
       `;
@@ -57,68 +74,123 @@ export class InvoiceHTMLTemplate {
       return `
         <div class="header">
           <div class="title">${data.config.company.name}</div>
-          <div class="company-info">
-            ${data.config.company.address}<br>
-            NIT: ${data.config.company.nit} | NRC: ${data.config.company.nrc}
-          </div>
+          <div>Sucursal: ${data.config.company.branch}</div>
+          <div>${data.config.company.address}</div>
         </div>
-        <h2>Factura Consumidor Final</h2>
+        <div class="divider"></div>
       `;
     }
   
-    private static clientInfo(data: SaleInvoiceData): string {
+    private static businessInfo(data: SaleInvoiceData): string {
       return `
-        <div class="client-info">
-          <strong>Cliente:</strong> ${data.sale.customer?.name || 'Consumidor Final'}<br>
-          <strong>Fecha:</strong> ${new Date(data.sale.date).toLocaleDateString('es-SV')}<br>
-          <strong>Cajero:</strong> ${data.sale.user}<br>
-          <strong>Caja:</strong> ${data.sale.cashregister}
+        <div>
+          <div>NIT: ${data.config.company.nit}</div>
+          <div>NRC: ${data.config.company.nrc}</div>
+          <div>Caja: ${data.sale.cashregister}</div>
         </div>
+        <div class="divider"></div>
       `;
     }
   
-    private static productsTable(data: SaleInvoiceData): string {
+    private static saleDetails(data: SaleInvoiceData): string {
       return `
-        <table class="details-table">
+        <div>
+          <div>Fecha: ${new Date(data.sale.date).toLocaleString('es-SV')}</div>
+          <div>Factura: ${data.sale.id.toString().padStart(8, '0')}</div>
+          <div>Cliente: ${data.sale.customer?.name || 'Consumidor Final'}</div>
+          <div>Cajero: ${data.sale.user}</div>
+        </div>
+        <div class="divider"></div>
+      `;
+    }
+  
+    private static itemsTable(data: SaleInvoiceData): string {
+      return `
+        <table class="items-table">
           <thead>
             <tr>
-              <th>Cantidad</th>
+              <th>Cant.</th>
               <th>Descripción</th>
-              <th>Precio Unitario</th>
-              <th>Total</th>
+              <th class="right">P.Unit</th>
+              <th class="right">Total</th>
             </tr>
           </thead>
           <tbody>
-            ${data.sale.products.map(product => `
-              <tr>
-                <td>${product.quantity}</td>
-                <td>${product.product.name}</td>
-                <td>$${product.price.toFixed(2)}</td>
-                <td>$${(product.price * product.quantity).toFixed(2)}</td>
-              </tr>
-            `).join('')}
+            ${data.sale.products.map(product => {
+              // Calcular precio unitario con descuento
+              const unitPriceWithDiscount = product.discountAmount > 0 
+                ? (product.price - (product.discountAmount / product.quantity))
+                : product.price;
+
+              const unitPrice = (product.price/product.quantity)
+                
+              return `
+                <tr>
+                  <td>${product.quantity}</td>
+                  <td>${product.product.name}</td>
+                  <td class="right">$${unitPrice.toFixed(2)}</td>
+                  <td class="right">$${(unitPrice * product.quantity).toFixed(2)}</td>
+                </tr>
+                ${product.discountAmount > 0 ? `
+                <tr class="discount-row">
+                  <td></td>
+                  <td>↳ Descuento Aplicado</td>
+                  <td class="right">-${(product.discountAmount / product.quantity).toFixed(2)}</td>
+                  <td class="right">-${product.discountAmount.toFixed(2)}</td>
+                </tr>
+                `: ''}
+              `;
+            }).join('')}
           </tbody>
         </table>
+        <div class="divider"></div>
       `;
     }
   
     private static totalsSection(data: SaleInvoiceData): string {
+      const change = data.sale.paid - data.sale.totalWithIVA;
+      const subTotal = data.sale.totalWithIVA + data.sale.totalDiscounts;
       return `
         <div class="totals-section">
-          <div><strong>Subtotal:</strong> $${data.sale.totalWithIVA.toFixed(2)}</div>
-          <div><strong>Total:</strong> $${data.sale.totalWithIVA.toFixed(2)}</div>
-          <div><strong>Pago Recibido:</strong> $${data.sale.paid.toFixed(2)}</div>
-          <div><strong>Cambio:</strong> $${(data.sale.paid - data.sale.totalWithIVA).toFixed(2)}</div>
-          <div><strong>${NumberToWords.convert(data.sale.totalWithIVA)}</strong></div>
+          <div>Subtotal: $${subTotal.toFixed(2)}</div>
+          <div>Dto. Total: $${data.sale.totalDiscounts.toFixed(2)}</div>
+          <div>Total: $${data.sale.totalWithIVA.toFixed(2)}</div>
+          <div>Recibido: $${data.sale.paid.toFixed(2)}</div>
+          <div class="bold">Cambio: $${change.toFixed(2)}</div>
+          <div class="bold">${NumberToWords.convert(data.sale.totalWithIVA)}</div>
+        </div>
+        <div style="clear: both;"></div>
+        <div class="divider"></div>
+      `;
+    }
+  
+    private static paymentInfo(data: SaleInvoiceData): string {
+      // Dividir el string en multiples lineas
+      let qrLines = [];
+      try {
+        const qrData = JSON.parse(data.config.qrData);
+        qrLines = [
+          `Factura: ${qrData.saleId}`,
+          `Total: $${qrData.total.toFixed(2)}`,
+          `Fecha: ${new Date(qrData.date).toLocaleDateString('es-SV')}`
+        ];
+      } catch (e) {
+        // Si falla el parseo, mostrar el texto original dividido
+        qrLines = data.config.qrData.split(',').map(item => item.trim());
+      }
+      
+      return `
+        <div class="qr-container">
+          <img src="${data.config.qrImage}" width="150" height="150">
+          <div>${qrLines.map(line => `<div>${line}</div>`).join('')}</div>
         </div>
       `;
     }
   
-    private static qrSection(data: SaleInvoiceData): string {
+    private static footer(): string {
       return `
-        <div class="qr-code">
-          <img src="${data.config.qrImage}" width="100" height="100">
-          <p>Ver Detalles: ${data.config.qrData}</p>
+        <div class="footer">
+          <div>Gracias por su compra!</div>
         </div>
       `;
     }

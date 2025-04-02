@@ -7,12 +7,15 @@ export class ThermalInvoiceTemplate {
         @page { margin: 0; padding: 0; size: 80mm auto; }
         body { 
           font-family: 'Courier New', monospace;
-          font-size: 20px;
+          font-size: 18px;
           width: 76mm !important;
           margin: 2mm auto !important;
           line-height: 1.2;
         }
-        .header { text-align: center; margin-bottom: 3px; }
+        .header { text-align: center; margin-bottom: 3px; font-size: 12px; margin-top: 10px; }
+        .businessInfo { font-size: 12px; }
+        .saleDetails { font-size: 12px; }
+        .totalsSection { font-size: 14px; }
         .divider { border-top: 1px dashed #000; margin: 5px 0; }
         .items-table { width: 100%; border-collapse: collapse; }
         .items-table td { padding: 1px 0; vertical-align: top; }
@@ -56,7 +59,7 @@ export class ThermalInvoiceTemplate {
   
     private static businessInfo(data: SaleInvoiceData): string {
       return `
-        <div>
+        <div class="businessInfo bold">
           <div>NIT: ${data.config.company.nit}</div>
           <div>NRC: ${data.config.company.nrc}</div>
           <div>Caja: ${data.sale.cashregister}</div>
@@ -67,9 +70,10 @@ export class ThermalInvoiceTemplate {
   
     private static saleDetails(data: SaleInvoiceData): string {
       return `
-        <div>
-          <div>Fecha: ${new Date(data.sale.date).toLocaleString('es-SV')}</div>
+        <div class="saleDetails bold">
+          <div>Fecha y Hora: ${new Date(data.sale.date).toLocaleString('es-SV')}</div>
           <div>Factura: ${data.sale.id.toString().padStart(8, '0')}</div>
+          <div>Tipo Doc: ${data.config.company.typeDoc}</div>
           <div>Cliente: ${data.sale.customer?.name || 'Consumidor Final'}</div>
           <div>Cajero: ${data.sale.user}</div>
         </div>
@@ -120,7 +124,7 @@ export class ThermalInvoiceTemplate {
       const change = data.sale.paid - data.sale.totalWithIVA;
       const subTotal = data.sale.totalWithIVA + data.sale.totalDiscounts;
       return `
-        <div>
+        <div class="totalsSection bold">
           <div>Subtotal: $${subTotal.toFixed(2)}</div>
           <div>Dto. Total: $${data.sale.totalDiscounts.toFixed(2)}</div>
           <div>Total: $${data.sale.totalWithIVA.toFixed(2)}</div>

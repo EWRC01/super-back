@@ -27,6 +27,7 @@ export interface SaleInvoiceData {
         address: string;
         nit: string;
         nrc: string;
+        typeDoc: string;
       };
       qrData: string;
       qrImage?: string;
