@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNumber, IsNotEmpty, IsDate, IsPositive, IsArray, ValidateNested, IsEnum, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
 import { PriceType } from 'src/common/enums/price-type.enum';
@@ -68,7 +68,7 @@ export class CreateSaleDto {
   @IsPositive()
   paid: number;
 
-  @ApiProperty({ example: 1, description: 'ID del cliente' })
+  @ApiPropertyOptional({ example: 1, description: 'ID del cliente' })
   @IsNumber()
   customerId: number;
 

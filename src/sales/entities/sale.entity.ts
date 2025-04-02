@@ -28,7 +28,7 @@ export class Sale {
 
   @ManyToOne(() => Customer, (customer) => customer.sales, {nullable: true})
   @JoinColumn({ name: 'customerId' })
-  customer?: Customer;
+  customer?: Customer | null;
 
   @ManyToOne(() => User, (user) => user.sales, {onDelete: 'CASCADE'})
   @JoinColumn({ name: 'userId' })
