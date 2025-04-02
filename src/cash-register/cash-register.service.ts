@@ -28,40 +28,22 @@ export class CashRegisterService {
   
     const timezone = 'America/El_Salvador';
     const currentDate = moment().tz(timezone).format('YYYY-MM-DD HH:mm:ss');
-  
     const { initialCash } = openCashRegisterDto;
   
-    // Definir el inicio y fin del día actual
-    const todayStart = moment().tz(timezone).startOf('day').toDate();
-    const todayEnd = moment().tz(timezone).endOf('day').toDate();
-  
-    // Obtener la última caja cerrada del mismo día y usuario
-    const lastClosedCashRegister = await this.cashRegisterRepository.findOne({
-      where: {
-        state: StateCashRegister.CLOSED,
-        user: { id: userId },
-        date: Between(todayStart, todayEnd),
-      },
-      order: { date: 'DESC' },
-    });
-  
-    // Solo se toma el expectedCash si la caja cerrada es del mismo día
-    const previousExpectedCash = lastClosedCashRegister ? lastClosedCashRegister.expectedCash : 0;
+    // No se consulta la caja cerrada anterior, ya que cada turno es independiente
   
     const cashRegister = new CashRegister();
     cashRegister.date = currentDate as unknown as Date;
-    cashRegister.cashInHand = previousExpectedCash + initialCash; // Se suma solo si es del mismo día
+    cashRegister.cashInHand = initialCash;         // Solo se usa el efectivo inicial
     cashRegister.totalSales = 0;
-    cashRegister.expectedCash = previousExpectedCash + initialCash;
+    cashRegister.expectedCash = initialCash;         // ExpectedCash inicia igual al efectivo inicial
     cashRegister.discrepancy = 0;
     cashRegister.state = StateCashRegister.OPEN;
     cashRegister.user = { id: userId } as User;
-    cashRegister.previousCashRegisterId = lastClosedCashRegister ? lastClosedCashRegister.id : null;
+    cashRegister.previousCashRegisterId = null;      // No se referencia turno anterior
   
     return this.cashRegisterRepository.save(cashRegister);
   }
-  
-  
 
   async closeCashRegister(userId: number, cashInHand: number): Promise<CashRegister> {
     const timezone = 'America/El_Salvador';
@@ -72,7 +54,7 @@ export class CashRegisterService {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
   
-    // Obtener la última caja abierta del usuario
+    // Obtener la caja abierta actual del usuario
     const lastOpenedCashRegister = await this.cashRegisterRepository.findOne({
       where: { user: { id: userId }, state: StateCashRegister.OPEN },
       order: { date: 'DESC' },
@@ -81,21 +63,19 @@ export class CashRegisterService {
       throw new HttpException('No open cash register found', HttpStatus.BAD_REQUEST);
     }
   
-    // Definir el inicio y fin del día de apertura de la caja abierta
-    // Esto garantiza que solo se tomen en cuenta ventas del mismo día en que se abrió la caja
-    const openMoment = moment(lastOpenedCashRegister.date).tz(timezone);
-    const todayStart = openMoment.clone().startOf('day').toDate();
-    const todayEnd = openMoment.clone().endOf('day').toDate();
+    // Convertir la fecha de apertura a Date y obtener la fecha actual en esa zona horaria
+    const openDate = moment(lastOpenedCashRegister.date).tz(timezone).toDate();
+    const closingDate = moment(currentDate, 'YYYY-MM-DD HH:mm:ss').toDate();
   
-    // Consultar las ventas dentro del rango del día en que se abrió la caja
+    // Calcular las ventas realizadas desde el momento de apertura hasta el cierre
     const salesResult = await this.saleRepository
       .createQueryBuilder('sale')
       .select('SUM(sale.totalWithIVA)', 'totalSales')
-      .where('sale.date BETWEEN :todayStart AND :todayEnd', { todayStart, todayEnd })
+      .where('sale.date BETWEEN :openDate AND :closingDate', { openDate, closingDate })
       .getRawOne();
     const totalSales = parseFloat(salesResult.totalSales) || 0;
   
-    // Calcular el efectivo esperado tomando el efectivo inicial de la caja abierta + ventas del día
+    // Calcular el efectivo esperado: efectivo inicial (del turno actual) + ventas del turno
     const expectedCash = lastOpenedCashRegister.cashInHand + totalSales;
     const discrepancy = cashInHand - expectedCash;
   
@@ -107,12 +87,10 @@ export class CashRegisterService {
     cashRegister.discrepancy = discrepancy;
     cashRegister.state = StateCashRegister.CLOSED;
     cashRegister.user = { id: userId } as User;
-    cashRegister.previousCashRegisterId = lastOpenedCashRegister.id;
+    cashRegister.previousCashRegisterId = lastOpenedCashRegister.id; // Puede ser útil para trazabilidad, pero no afecta los cálculos
   
     return this.cashRegisterRepository.save(cashRegister);
   }
-  
-  
 
   // Mostrar todos los registros de caja
   
