@@ -26,9 +26,9 @@ export class Sale {
   @Column({ type: 'decimal', precision: 9, scale: 2 })
   totalDiscount: number; // <-- Nuevo campo
 
-  @ManyToOne(() => Customer, (customer) => customer.sales, {onDelete: 'CASCADE'})
+  @ManyToOne(() => Customer, (customer) => customer.sales, {nullable: true})
   @JoinColumn({ name: 'customerId' })
-  customer: Customer;
+  customer?: Customer;
 
   @ManyToOne(() => User, (user) => user.sales, {onDelete: 'CASCADE'})
   @JoinColumn({ name: 'userId' })
