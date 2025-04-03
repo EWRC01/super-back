@@ -25,6 +25,17 @@ export class CashRegisterService {
     if (!user) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
+
+    const existingOpenRegister = await this.cashRegisterRepository.findOne({
+      where: { user: {id: userId }, state: StateCashRegister.OPEN},
+    });
+
+    if (existingOpenRegister) {
+      throw new HttpException(
+        'User already has an open cash register',
+        HttpStatus.BAD_REQUEST
+      );
+    }
   
     const timezone = 'America/El_Salvador';
     const currentDate = moment().tz(timezone).format('YYYY-MM-DD HH:mm:ss');
@@ -72,6 +83,7 @@ export class CashRegisterService {
       .createQueryBuilder('sale')
       .select('SUM(sale.totalWithIVA)', 'totalSales')
       .where('sale.date BETWEEN :openDate AND :closingDate', { openDate, closingDate })
+      .andWhere('sale.userId = :userId', {userId}) // Filtro por usuario, no por total ventas
       .getRawOne();
     const totalSales = parseFloat(salesResult.totalSales) || 0;
   
