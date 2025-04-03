@@ -3,6 +3,7 @@ import { Sale } from '../../sales/entities/sale.entity';
 import { Product } from '../../products/entities/product.entity';
 import { OperationType } from 'src/common/enums/operation-type.enum';
 import { AppliedDiscount } from 'src/discounts/entities/applied-discount.entity';
+import { PriceType } from 'src/common/enums/price-type.enum';
 
 @Entity('sold_products')
 export class SoldProduct {
@@ -33,7 +34,7 @@ export class SoldProduct {
   @Column({ type: 'bigint', unsigned: true, nullable: false })
   productId: number;
 
-  @Column({ type: 'enum', enum: OperationType, nullable: false })
+  @Column({ type: 'enum', enum: PriceType, nullable: false })
   priceType: string;
 
   @Column({ type: 'bigint', unsigned: true, nullable: true })

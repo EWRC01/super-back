@@ -37,9 +37,20 @@ export class OrdersService {
   async findAll(): Promise<Order[]> {
     return await this.orderRepository.find({ 
       where: {isActive: true}, 
-      relations: ['provider', 'orderDetails'] });
+      relations: ['provider', 'orderDetails'],
+    });
   }
 
+  async findActive() {
+    return await this.orderRepository
+      .createQueryBuilder('order')
+      .leftJoinAndSelect('order.provider', 'provider')
+      .leftJoin('order.orderDetails', 'orderDetails')
+      .where('orderDetails.id IS NULL')
+      .select(['order.id', 'order.invoiceNumber'])
+      .getMany();
+  }
+  
   async findAllDeleted(): Promise<Order[]> {
     return await this.orderRepository.find({ 
       where: {isActive: false}, 

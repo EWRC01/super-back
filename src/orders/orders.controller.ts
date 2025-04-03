@@ -17,6 +17,12 @@ export class OrdersController {
     return this.orderService.create(createOrderDto);
   }
 
+  @Get('findActive/')
+  @ApiOperation({ summary: 'Obtener pedidos sin detalles '})
+  async findActive() {
+    return this.orderService.findActive();
+  }
+
   @Get()
   @ApiOperation({ summary: 'Obtener todos los pedidos' })
   @ApiResponse({ status: 200, description: 'Lista de pedidos', type: [Order] })
