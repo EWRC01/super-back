@@ -21,6 +21,8 @@ import { OrderdetailsModule } from './orderdetails/orderdetails.module';
 import { PrintModule } from './print/print.module';
 import { DamagedProductsModule } from './damaged-products/damaged-products.module';
 import { DiscountsModule } from './discounts/discounts.module';
+import { BackupService } from './backup/backup.service';
+import { BackupModule } from './backup/backup.module';
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -53,9 +55,9 @@ import { DiscountsModule } from './discounts/discounts.module';
     ConfigurationModule, 
     QuotationProductsModule, 
     CashRegisterModule, 
-    TaxModule, EmployeesModule, EmployeePaymentsModule, ProvidersModule, OrdersModule, OrderdetailsModule, PrintModule, DamagedProductsModule, DiscountsModule
+    TaxModule, EmployeesModule, EmployeePaymentsModule, ProvidersModule, OrdersModule, OrderdetailsModule, PrintModule, DamagedProductsModule, DiscountsModule, BackupModule
   ],
   controllers: [],
-  providers: [],
+  providers: [BackupService],
 })
 export class AppModule {}
