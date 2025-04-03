@@ -11,11 +11,27 @@ async function bootstrap() {
   app.useStaticAssets(join(__dirname, '..', 'uploads')),
 
   app.enableCors({
-    origin: configService.get<string>('FRONTEND_URL', 'http://localhost:4000'), // Valor por defecto si no se provee
+    origin: (origin, callback) => {
+      const allowedOrigins = [
+        configService.get<string>('FRONTEND_URL'),
+        configService.get<string>('FRONTEND_URL_PROD'),
+        configService.get<string>('BACKEND_URL'),
+        configService.get<string>('BACKEND_URL_PROD'),
+        configService.get<string>('BACKEND_LOCAL'),
+        configService.get<string>('FRONTEND_LOCAL'),
+        'http://localhost:4000'
+      ].filter(Boolean);
+  
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Origen no permitido por CORS'));
+      }
+    },
     methods: 'GET,POST,PATCH,PUT,DELETE,OPTIONS',
-    allowHeaders: 'Content-Type, Authorization',
+    allowedHeaders: 'Content-Type, Authorization',
     credentials: true
-  });  // Para evitar problemas de CORS
+  });
 
   const config = new DocumentBuilder()
     .setTitle('Super API')
