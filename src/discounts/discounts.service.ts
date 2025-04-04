@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
 import * as moment from 'moment-timezone';
@@ -91,9 +91,16 @@ export class DiscountsService {
     return this.discountRepository.save(discount);
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(id: number) {
     const discount = await this.findOne(id);
-    await this.discountRepository.remove(discount);
+
+    if (!discount) {
+      return new HttpException(`Descuento con ID: ${id} no encontrado`, HttpStatus.NOT_FOUND)
+    }
+
+    discount.isActive = false;
+
+    await this.discountRepository.save(discount);
   }
 
   async getApplicableDiscounts(
