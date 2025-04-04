@@ -1,6 +1,6 @@
 import { BadRequestException, HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import { Product } from './entities/product.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -177,13 +177,13 @@ export class ProductsService {
    * Busca productos por nombre o código.
    */
   async findByNameOrCode(term: string) {
-    const query = this.productRepository.createQueryBuilder('product')
-      .leftJoinAndSelect('product.brand', 'brand')
-      .leftJoinAndSelect('product.category', 'category')
-      .where('product.code = :term', { term })
-      .orWhere('LOWER(product.name) LIKE LOWER(:search)', { search: `%${term}%` });
-  
-    const products = await query.getMany();
+    const products = await this.productRepository.find({
+      where: [
+        { name: Like(`%${term}%`) },
+        { code: Like(`%${term}%`) }
+      ],
+      relations: ['brand', 'category']
+    });
   
     if (products.length === 0) {
       throw new HttpException('Product Not Found!', HttpStatus.NOT_FOUND);
