@@ -180,7 +180,8 @@ export class ProductsService {
     const products = await this.productRepository.find({
       where: [
         { name: Like(`%${term}%`) },
-        { code: Like(`%${term}%`) }
+        { code: Like(`%${term}%`) },
+        {isDeleted: false}
       ],
       relations: ['brand', 'category']
     });
