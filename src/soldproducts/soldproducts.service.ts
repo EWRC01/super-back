@@ -262,7 +262,7 @@ async registerSoldProducts(createSoldProductsDto: CreateSoldProductsDto): Promis
       .createQueryBuilder('soldProduct')
       .innerJoin(Product, 'product', 'product.id = soldProduct.productId')
       .select([
-        'SUM(soldProduct.quantity * soldProduct.price) AS total',
+        'SUM(soldProduct.price) AS total', // <- Cambio aquí
         'SUM(soldProduct.quantity) AS units',
         'product.name',
       ])
@@ -271,11 +271,7 @@ async registerSoldProducts(createSoldProductsDto: CreateSoldProductsDto): Promis
       .orderBy('total', 'DESC')
       .limit(limit)
       .getRawMany();
-
-    if (!topProducts.length) {
-      throw new NotFoundException('No se encontraron productos vendidos.');
-    }
-
+  
     return topProducts;
   }
 
@@ -287,16 +283,12 @@ async registerSoldProducts(createSoldProductsDto: CreateSoldProductsDto): Promis
       .innerJoin(SoldProduct, 'soldProduct', 'soldProduct.productId = product.id')
       .select([
         'brand.brandName AS brandName',
-        'SUM(soldProduct.price * soldProduct.quantity) AS totalSales',
+        'SUM(soldProduct.price) AS totalSales', // <- Quita " * soldProduct.quantity"
       ])
       .where("soldProduct.type = 'sale'")
       .groupBy('brand.id')
       .getRawMany();
-
-    if (!totals.length) {
-      throw new NotFoundException('No se encontraron ventas por marca.');
-    }
-
+  
     return totals;
   }
 
@@ -308,16 +300,12 @@ async registerSoldProducts(createSoldProductsDto: CreateSoldProductsDto): Promis
       .innerJoin(SoldProduct, 'soldProduct', 'soldProduct.productId = product.id')
       .select([
         'category.categoryName AS categoryName',
-        'SUM(soldProduct.price * soldProduct.quantity) AS totalSales',
+        'SUM(soldProduct.price) AS totalSales', // <- Quita " * soldProduct.quantity"
       ])
       .where("soldProduct.type = 'sale'")
       .groupBy('category.id')
       .getRawMany();
-
-    if (!totals.length) {
-      throw new NotFoundException('No se encontraron ventas por categoría.');
-    }
-
+  
     return totals;
   }
 
