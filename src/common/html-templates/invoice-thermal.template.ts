@@ -12,10 +12,10 @@ export class ThermalInvoiceTemplate {
           margin: 2mm auto !important;
           line-height: 1.2;
         }
-        .header { text-align: center; margin-bottom: 3px; font-size: 12px; margin-top: 10px; }
-        .businessInfo { font-size: 12px; }
-        .saleDetails { font-size: 12px; }
-        .totalsSection { font-size: 14px; }
+        .header { text-align: center; margin-bottom: 3px; font-size: 16px; margin-top: 10px; }
+        .businessInfo { font-size: 16px; }
+        .saleDetails { font-size: 16px; }
+        .totalsSection { font-size: 16px; }
         .divider { border-top: 1px dashed #000; margin: 5px 0; }
         .items-table { width: 100%; border-collapse: collapse; }
         .items-table td { padding: 1px 0; vertical-align: top; }
@@ -123,6 +123,7 @@ export class ThermalInvoiceTemplate {
       const change = data.sale.paid - data.sale.totalWithIVA;
       const subTotal = data.sale.totalWithIVA + data.sale.totalDiscounts;
       return `
+      <div class="divider"></div>
         <div class="totalsSection bold">
           <div>Subtotal: $${subTotal.toFixed(2)}</div>
           <div>Dto. Total: $${data.sale.totalDiscounts.toFixed(2)}</div>

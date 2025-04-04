@@ -10,24 +10,36 @@ export class BackupService {
   private readonly backupPath: string;
 
   constructor(private readonly configService: ConfigService) {
-    this.backupPath = path.join(__dirname, '../../backups');
+    // Usar ruta absoluta y directorio accesible
+    this.backupPath = path.join(process.cwd(), 'backups'); 
 
-    // Verificar si la carpeta de backups existe, sino, crearla
+    // Crear directorio con permisos explícitos (si no existe)
     if (!fs.existsSync(this.backupPath)) {
-      fs.mkdirSync(this.backupPath, { recursive: true });
+      fs.mkdirSync(this.backupPath, { 
+        recursive: true,
+        mode: 0o755 // Permisos: usuario (rwx), grupo (rx), otros (rx)
+      });
     }
   }
 
   async createBackup(): Promise<void> {
     const dbHost = this.configService.get<string>('DB_HOST');
-    const dbUser = this.configService.get<string>('DB_USER');
+    const dbUser = this.configService.get<string>('DB_USERNAME');
     const dbPassword = this.configService.get<string>('DB_PASSWORD');
     const dbName = this.configService.get<string>('DB_NAME');
 
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const backupFile = path.join(this.backupPath, `backup-${timestamp}.sql`);
 
-    const dumpCommand = `mysqldump -h ${dbHost} -u ${dbUser} ${dbPassword ? `-p${dbPassword}` : ''} ${dbName} > ${backupFile}`;
+    // Construir comando con comillas y escaping correcto
+    const dumpCommand = [
+      'mysqldump',
+      `-h${dbHost}`,
+      `-u${dbUser}`,
+      `-p"${dbPassword.replace(/"/g, '\\"')}"`, // Escapar comillas en la contraseña
+      dbName,
+      `> "${backupFile}"` // Comillas en la ruta de salida
+    ].join(' ');
 
     exec(dumpCommand, (error, stdout, stderr) => {
       if (error) {
