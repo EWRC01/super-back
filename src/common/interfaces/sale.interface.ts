@@ -17,6 +17,7 @@ export interface SaleInvoiceData {
         discountAmount: number;
         product: {
           name: string;
+          unitPrice: number;
         };
       }>;
     };

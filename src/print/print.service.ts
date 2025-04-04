@@ -11,6 +11,7 @@ import * as QRCode from 'qrcode';
 import { InvoiceHTMLTemplate } from 'src/common/html-templates/invoice.template';
 import { ThermalInvoiceTemplate } from 'src/common/html-templates/invoice-thermal.template';
 import { ConfigService } from '@nestjs/config';
+import { Product } from 'src/products/entities/product.entity';
 
 @Injectable()
 export class PrintService {
@@ -49,7 +50,10 @@ export class PrintService {
           discountAmount: p.discountAmount,
           quantity: p.quantity,
           price: p.price,
-          product: { name: p.product.name },
+          product: { 
+            name: p.product.name,
+            unitPrice: (p.price + p.discountAmount) / p.quantity
+           },
         })),
       },
       config: {

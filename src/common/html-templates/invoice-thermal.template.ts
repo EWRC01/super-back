@@ -91,32 +91,31 @@ export class ThermalInvoiceTemplate {
             <td class="right"><strong>Total</strong></td>
           </tr>
           ${data.sale.products.map(product => {
-            // Calcular precio unitario con descuento
-            const unitPriceWithDiscount = product.discountAmount > 0 
-              ? (product.price - (product.discountAmount / product.quantity))
-              : product.price;
-
-            const unitPrice = (product.price/product.quantity)
-              
+            const totalSinDescuento = product.product.unitPrice * product.quantity;
+            const totalConDescuento = product.price;
+    
             return `
               <tr>
                 <td>${product.quantity}</td>
                 <td>${product.product.name}</td>
-                <td class="right">$${unitPrice.toFixed(2)}</td>
-                <td class="right">$${(unitPrice * product.quantity).toFixed(2)}</td>
+                <td class="right">$${product.product.unitPrice.toFixed(2)}</td>
+                <td class="right">$${totalSinDescuento.toFixed(2)}</td>
               </tr>
               ${product.discountAmount > 0 ? `
-              <tr class="discount-row">
-                <td></td>
-                <td>↳ Descuento Aplicado</td>
-                <td class="right">-${(product.discountAmount / product.quantity).toFixed(2)}</td>
-                <td class="right">-${product.discountAmount.toFixed(2)}</td>
+                <tr class="discount-row">
+                  <td></td>
+                  <td>↳ Descuento aplicado</td>
+                  <td class="right"></td>
+                  <td class="right">-$${product.discountAmount.toFixed(2)}</td>
+                </tr>
+              ` : ''}
+              <tr>
+                <td colspan="3"></td>
+                <td class="right"><strong>$${totalConDescuento.toFixed(2)}</strong></td>
               </tr>
-              `: ''}
             `;
           }).join('')}
         </table>
-        <div class="divider"></div>
       `;
     }
   
