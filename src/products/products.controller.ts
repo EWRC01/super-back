@@ -39,6 +39,12 @@ export class ProductsController {
     return this.productsService.findOne(id);
   }
 
+  @Get('findByCode/:code')
+  @ApiOperation({ summary: 'Get product details by code' })
+  async findByCode(@Param('code') code: string) {
+    return this.productsService.findByCode(code);
+  }
+
   @Get(':id/price')
   @ApiOperation({ summary: 'Get product price by ID' })
   async getPriceByID(@Param('id') id: number) {

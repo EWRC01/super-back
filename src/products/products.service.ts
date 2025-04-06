@@ -203,6 +203,12 @@ export class ProductsService {
     return product;
   }
 
+  async findByCode(code: string) {
+    const product = await this.productRepository.findOne({where : {code: code}, relations: ['brand', 'category']});
+    if (!product) throw new NotFoundException('Producto No Encontrado');
+    return product;
+  }
+
   /**
    * Actualiza los datos de un producto.
    */
