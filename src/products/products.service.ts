@@ -296,4 +296,16 @@ export class ProductsService {
     product.stock -= Number(quantity);
     return await this.productRepository.save(product);
   }
+
+  async generateInternalBarCode(): Promise<String> {
+
+    const lastProduct = await this.productRepository.findOne({
+      where: {},
+      order: { id: 'DESC' }
+    });
+
+    const nextId = (lastProduct?.id || 0) + 1;
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    return `TEMP-${nextId}${randomSuffix}`;
+  }
 }

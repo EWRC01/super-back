@@ -130,4 +130,11 @@ export class ProductsController {
   async subtractStock(@Param('id') id: number, @Query('quantity') quantity: number) {
     return this.productsService.subtractStock(id, quantity);
   }
+
+  @Get('internal-barcode/generate')
+  @ApiOperation({ summary: 'Generate Random Bar code'} )
+  async generateCode() {
+    const code = await this.productsService.generateInternalBarCode();
+    return { code };
+  }
 }
